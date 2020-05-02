@@ -42,19 +42,19 @@ def pid(target, sensor,  rightmotorSpeed, leftmotorSpeed, prevError, sumError, K
     convert_speed = convert_error(error) #convert the error to speed that need to modify on the mootor
     if convert_speed < 0: # turn left
         leftmotorSpeed = leftmotorSpeed - (convert_speed * Kp * -1) - ((convert_speed - prevError) * Kd) - (sumError * Ki)
-        leftmotorSpeed = max(0.4,min(.8,leftmotorSpeed))
+        leftmotorSpeed = max(0.4,min(1,leftmotorSpeed))
         
         rightmotorSpeed = rightmotorSpeed + (convert_speed * Kp * -1) + ((convert_speed - prevError) * Kd) + (sumError * Ki)
-        rightmotorSpeed = max(0.4,min(.8,rightmotorSpeed))
+        rightmotorSpeed = max(0.4,min(1,rightmotorSpeed))
         
         prevError = convert_speed
         sumError += convert_speed
     elif convert_speed > 0: #turn right
         rightmotorSpeed = rightmotorSpeed - (convert_speed * Kp) - ((convert_speed - prevError) * Kd) - (sumError * Ki)
-        rightmotorSpeed = max(0.4,min(.8,rightmotorSpeed))
+        rightmotorSpeed = max(0.4,min(1,rightmotorSpeed))
         
         leftmotorSpeed = leftmotorSpeed + (convert_speed *Kp) + ((convert_speed - prevError) * Kd) + (sumError * Ki)
-        leftmotorSpeed = max(0.4,min(.8,leftmotorSpeed))
+        leftmotorSpeed = max(0.4,min(1,leftmotorSpeed))
         
         prevError = convert_speed
         sumError += convert_speed

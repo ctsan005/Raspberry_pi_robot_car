@@ -3,5 +3,76 @@ import board
 import busio
 from subprocess import call
 from motorFunction import *
+from Tune_PID import *
+from Ultrasonic_Sensor import *
 import adafruit_bno055
 from adafruit_motorkit import MotorKit
+
+kit = MotorKit()
+i2c = busio.I2C(board.SCL, board.SDA)
+sensor = adafruit_bno055.BNO055(i2c)
+
+# ~ sensor = calibration() #calibrate sensor
+sensor = adafruit_bno055.BNO055(i2c) 
+
+input("press enter to start")
+start_time = time.time() 
+target = sensor.euler[0]
+print("initial target is : {}" .format(target))
+prev = 0
+sumError = 0
+rightspeed = 1
+leftspeed = 1
+kit.motor1.throttle = leftspeed
+kit.motor2.throttle = leftspeed
+kit.motor3.throttle = rightspeed
+kit.motor4.throttle = rightspeed
+
+t = 0
+Time = [] #Store Data for time
+Angle = [] #Store current angle at time t
+Target = [] #Store Target data as a reference
+
+while( time.time() - start_time<2): 
+	rightspeed, leftspeed, prev, sumError = pid(target, sensor, rightspeed, leftspeed, prev, sumError, .5, .005, .4)
+	kit.motor1.throttle = leftspeed
+	kit.motor2.throttle = leftspeed
+	kit.motor3.throttle = rightspeed
+	kit.motor4.throttle = rightspeed
+	Angle.append(t)
+	Time.append(t)
+	Target.append(t)
+	Angle[t] = sensor.euler[0]
+	Time[t] = t
+	Target[t] = target
+	t = t + 1
+	time.sleep(.02)
+
+print("finish straight")
+print("target is : {}" .format(sensor.euler[0]))
+start_time = time.time()
+target = target - 5
+print(Distance(0))
+while( Distance(0) > .6): #time.time() - start_time < 4
+	rightspeed, leftspeed, prev, sumError = pid(target, sensor, rightspeed, leftspeed, prev, sumError, .5, .005, .4)
+	kit.motor1.throttle = leftspeed
+	kit.motor2.throttle = leftspeed
+	kit.motor3.throttle = rightspeed
+	kit.motor4.throttle = rightspeed
+	Angle.append(t)
+	Time.append(t)
+	Target.append(t)
+	Angle[t] = sensor.euler[0]
+	Time[t] = t
+	Target[t] = target
+	t = t + 1
+	time.sleep(.02)
+	print(Distance(0))
+	
+kit.motor1.throttle = None
+kit.motor2.throttle = None
+kit.motor3.throttle = None
+kit.motor4.throttle = None
+print("finish turning")
+print("target is : {}" .format(sensor.euler[0]))
+graph(Time, Angle, Time, Target)

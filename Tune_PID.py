@@ -94,13 +94,12 @@ def straight_car(sensor, Kp, Ki, Kd):
             Target[t] = target
             leftspeedlist.append(leftspeed)
             rightspeedlist.append(rightspeed)
-            
             t = t + 1
             time.sleep(sleeptime) #50 Hz
             count = count + 1
-            if(count > 0.3385/sleeptime):        #not exact 2 sec time, other reason lead to longer time, need adjust
-                print(time.time()-start_time)
-                break
+            # ~ if(count > 0.3385/sleeptime):        #not exact 2 sec time, other reason lead to longer time, need adjust
+                # ~ print(time.time()-start_time)
+                # ~ break
         except KeyboardInterrupt:
             kit.motor1.throttle = None
             kit.motor2.throttle = None
@@ -111,17 +110,17 @@ def straight_car(sensor, Kp, Ki, Kd):
             print("Receieve keyboard Interrupt and stop the straight_car function")
             break
             
-while True:
+# ~ while True:
     # ~ sensor = calibration()
-    sensor = adafruit_bno055.BNO055(i2c) 
-    while True:
-        kit.motor1.throttle = None
-        kit.motor2.throttle = None
-        kit.motor3.throttle = None
-        kit.motor4.throttle = None
-        input("Press enter to start straight car function and ctr-c to stop it")
-        Kp = input("what is Kp: ") #.5
-        Ki = input("what is Ki: ") #.01
-        Kd = input("what is Kd: ") #.2
-        straight_car(sensor, float(Kp), float(Ki), float(Kd))
+    # ~ sensor = adafruit_bno055.BNO055(i2c) 
+    # ~ while True:
+        # ~ kit.motor1.throttle = None
+        # ~ kit.motor2.throttle = None
+        # ~ kit.motor3.throttle = None
+        # ~ kit.motor4.throttle = None
+        # ~ input("Press enter to start straight car function and ctr-c to stop it")
+        # ~ Kp = input("what is Kp: ") #.5
+        # ~ Ki = input("what is Ki: ") #.01
+        # ~ Kd = input("what is Kd: ") #.2
+        # ~ straight_car(sensor, float(Kp), float(Ki), float(Kd))
 

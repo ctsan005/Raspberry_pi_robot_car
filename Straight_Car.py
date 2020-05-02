@@ -41,8 +41,8 @@ def straight_car(sensor, Kp, Ki, Kd):
     kit.motor2.throttle = leftspeed
     kit.motor3.throttle = rightspeed
     kit.motor4.throttle = rightspeed
-    count = 0
     sleeptime = 0.02
+    startime = time.time()
     
     while True:
         try:
@@ -64,8 +64,7 @@ def straight_car(sensor, Kp, Ki, Kd):
             
             t = t + 1
             time.sleep(sleeptime) #50 Hz
-            count = count + 1
-            if(count > 2/sleeptime):
+            if(time.time() - startime > 2):
                 break
         except KeyboardInterrupt:
             kit.motor1.throttle = None
