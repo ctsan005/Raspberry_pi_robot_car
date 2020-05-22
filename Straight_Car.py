@@ -111,20 +111,43 @@ def rotate_in_place(sensor, angle):
         target = target - 360
     
     if target > 180:
-        leftspeed = 0.5
-        rightspeed = -0.5
+        leftspeed = 1
+        rightspeed = -1
         
     else:
-        leftspeed = -0.5
-        rightspeed = 0.5
-        
-    kit.motor1.throttle = leftspeed
-    kit.motor2.throttle = rightspeed
+        leftspeed = -1
+        rightspeed = 1
     
     
-    while sensor.euler[0] != target: pass
-        
-    leftspeed = 1
-    rightspeed = 1
+    print("the speed of the motor, left:{} right:{} target: {} " .format(leftspeed, rightspeed, target))    
     kit.motor1.throttle = leftspeed
-    kit.motor2.throttle = rightspeed
+    kit.motor2.throttle = leftspeed
+    kit.motor3.throttle = rightspeed
+    kit.motor4.throttle = rightspeed
+    
+    
+    # ~ while sensor.euler[0] != target: pass
+    while abs(sensor.euler[0] - target) >= 3: 
+        print(sensor.euler[0])
+        
+    leftspeed = None
+    rightspeed = None
+    print(sensor.euler[0])
+    kit.motor1.throttle = leftspeed
+    kit.motor2.throttle = leftspeed
+    kit.motor3.throttle = rightspeed
+    kit.motor4.throttle = rightspeed
+
+
+# ~ while True:
+    # ~ sensor = calibration()
+    # ~ sensor = adafruit_bno055.BNO055(i2c) 
+    # ~ input("quick calibratoin")
+    # ~ while True:
+        # ~ kit.motor1.throttle = None
+        # ~ kit.motor2.throttle = None
+        # ~ kit.motor3.throttle = None
+        # ~ kit.motor4.throttle = None
+        # ~ print("current angle is : {}" .format(sensor.euler[0]))
+        # ~ angle = input("please input the angle you want to turn: ")
+        # ~ rotate_in_place(sensor, float(angle))
