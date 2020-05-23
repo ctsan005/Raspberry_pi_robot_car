@@ -33,8 +33,11 @@ Time = [] #Store Data for time
 Angle = [] #Store current angle at time t
 Target = [] #Store Target data as a reference
 
-while( time.time() - start_time<2): 
-	rightspeed, leftspeed, prev, sumError = pid(target, sensor, rightspeed, leftspeed, prev, sumError, .5, .005, .4)
+while( time.time() - start_time<5): 
+	if(Distance(0) < .6):
+		print("hit wall")
+		break
+	rightspeed, leftspeed, prev, sumError = pid(target, sensor, rightspeed, leftspeed, prev, sumError, .5, .01, .2)
 	kit.motor1.throttle = leftspeed
 	kit.motor2.throttle = leftspeed
 	kit.motor3.throttle = rightspeed
@@ -49,25 +52,25 @@ while( time.time() - start_time<2):
 	time.sleep(.02)
 
 print("finish straight")
-print("target is : {}" .format(mirror_sensor_angle( sensor.euler[0] ) ))
-start_time = time.time()
-target = target + 30
-print(Distance(0))
-while( Distance(0) > .6): #time.time() - start_time < 4
-	rightspeed, leftspeed, prev, sumError = pid(target, sensor, rightspeed, leftspeed, prev, sumError, .5, .005, .4)
-	kit.motor1.throttle = leftspeed
-	kit.motor2.throttle = leftspeed
-	kit.motor3.throttle = rightspeed
-	kit.motor4.throttle = rightspeed
-	Angle.append(t)
-	Time.append(t)
-	Target.append(t)
-	Angle[t] = mirror_sensor_angle( sensor.euler[0] )
-	Time[t] = t
-	Target[t] = target
-	t = t + 1
-	time.sleep(.02)
-	print(Distance(0))
+# ~ print("target is : {}" .format(mirror_sensor_angle( sensor.euler[0] ) ))
+# ~ start_time = time.time()
+# ~ target = target + 0
+# ~ print(Distance(0))
+# ~ while( Distance(0) > .6): #time.time() - start_time < 4
+	# ~ rightspeed, leftspeed, prev, sumError = pid(target, sensor, rightspeed, leftspeed, prev, sumError, .5, .01, .2) #.5, .005, .4
+	# ~ kit.motor1.throttle = leftspeed
+	# ~ kit.motor2.throttle = leftspeed
+	# ~ kit.motor3.throttle = rightspeed
+	# ~ kit.motor4.throttle = rightspeed
+	# ~ Angle.append(t)
+	# ~ Time.append(t)
+	# ~ Target.append(t)
+	# ~ Angle[t] = mirror_sensor_angle( sensor.euler[0] )
+	# ~ Time[t] = t
+	# ~ Target[t] = target
+	# ~ t = t + 1
+	# ~ time.sleep(.02)
+	# ~ print(Distance(0))
 	
 kit.motor1.throttle = None
 kit.motor2.throttle = None

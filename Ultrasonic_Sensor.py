@@ -31,4 +31,5 @@ def Distance(channel):
 	voltage = Volts(data)
 	Distance = Range(voltage)
 	return Distance
-	
+
+

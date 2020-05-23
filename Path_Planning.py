@@ -59,8 +59,20 @@ def path_planning(x,y, sensor):
 	
 	local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )	#read the current facing angle
 	
+	origin_radians = local_radians			#This is the origin angle we are facing
+	
 	leftspeed = 1
 	rightspeed = 1		#init the speed for left and right motor
+	
+	control_speed(leftspeed, rightspeed)
+	time.sleep(0.2)
+	VL , VR = wheelspeed()
+	
+	ans =  FWDKIN(local_x, local_y, (local_radians - origin_radians), 0.2, 0.229, VL, VR)
+		
+	local_x = ans[0][0]
+	local_y = ans[1][0]
+	local_radians = ans[2][0]
 	
 	prev = 0
 	sumError = 0
@@ -70,14 +82,18 @@ def path_planning(x,y, sensor):
 	
 	
 	total_distance = math.sqrt(x**2 + y**2) # total distance to travel to target, use to see do we need to adjust the direct to avoid object
-	distance = total_distance	#init the distance to target = total distance
+	# ~ distance = total_distance	#init the distance to target = total distance
 	
 	
 	x_list.append(local_x)
 	y_list.append(local_y)
 	angle_list.append(math.degrees(local_radians))		#append the first data point to the data list
 	
-	while ((total_distance > 0.2) and (Distance(0) > 0.6)): # check does it reach the distance yet
+	while (total_distance > 0.2): # check does it reach the distance yet
+		
+		if Distance(0) < 0.6:
+			print("Hit wall")
+			break
 		
 		# ~ DLeft = Distance(Left) # get the left sensor distance
 		# ~ DRight = Distance(Right) # get the right sensor distance
@@ -85,19 +101,22 @@ def path_planning(x,y, sensor):
 		if x == 0:		#handle the special case of x = 0
 			x = 0.000001
 			
+		local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
 		
+		while math.degrees(local_radians) < -500 or math.degrees(local_radians) > 500:			#handle noise from sensor
+			local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
 		
 		t_angle = math.degrees ( math.atan( (y - local_y)/(x - local_x) ) )
 		
 		if t_angle > 0:
-			if y - local_y > 0:			#quadrants 1
+			if (y - local_y) > 0:			#quadrants 1
 				t_angle = t_angle
 							
 			else:						#quadrants 3
 				t_angle = 180 + t_angle
 				
 		else:			
-			if y - local_y < 0:			#quadrants 4
+			if (y - local_y) < 0:			#quadrants 4
 				t_angle = 360 + t_angle
 				
 			else:						#quadrants 2
@@ -112,7 +131,8 @@ def path_planning(x,y, sensor):
 		
 		
 		
-		print("current angle: {}" .format(angle))
+		print("Target angle: {}" .format(angle))
+		print("Current angle: {}" .format(math.degrees( local_radians) ) )
 		# move to face the correct angle
 		# ~ if(abs(angle - local_angle) > 3):
 		
@@ -120,10 +140,7 @@ def path_planning(x,y, sensor):
 			
 		
 		
-		local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
 		
-		while math.degrees(local_radians) < -500 or math.degrees(local_radians) > 500:			#handle noise from sensor
-			local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
 			
 		control_speed(leftspeed, rightspeed)		#control the speed of the car
 		
@@ -131,7 +148,7 @@ def path_planning(x,y, sensor):
 			start_time = time.time()
 			check = 1
 			
-		print("local radian before update in degree: {}".format(math.degrees( local_radians)))
+		# ~ print("local radian before update in degree: {}".format(math.degrees( local_radians)))
 		
 		
 		# go straight
@@ -143,13 +160,13 @@ def path_planning(x,y, sensor):
 		sample_time = time.time() - start_time
 		start_time = time.time()
 		# distance between left and right wheel = 0.229m
-		ans =  FWDKIN(local_x, local_y, local_radians, sample_time, 0.229, VL, VR)
+		ans =  FWDKIN(local_x, local_y, (local_radians - origin_radians), sample_time, 0.229, VL, VR)
 		
 		local_x = ans[0][0]
 		local_y = ans[1][0]
-		local_radians = ans[2][0]
+		local_radians = origin_radians + ans[2][0]
 		
-		print("local radian after update in degree: {}".format(math.degrees( local_radians)))
+		# ~ print("local radian after update in degree: {}".format(math.degrees( local_radians)))
 		
 		total_distance = math.sqrt((x - local_x)**2 + (y - local_y)**2)		#update the total distance to the destination
 		
@@ -163,7 +180,7 @@ def path_planning(x,y, sensor):
 		
 		print("distance need to travel: {} ".format(total_distance))
 		print("The current x and y is {}, {}".format(local_x, local_y))
-		print("The angle the car is facing is: {}".format(math.degrees(local_radians)))
+		print("Foward Kinematic angle: {}".format(math.degrees(local_radians)))
 		print()
 		
 		x_list.append(local_x)
@@ -204,14 +221,14 @@ i2c = busio.I2C(board.SCL, board.SDA)
 sensor = adafruit_bno055.BNO055(i2c) 
 control_speed(None,None)
 # ~ sensor = calibration()
-while True:
-	x = input("number of x ")
-	y = input("number of y ")
-	x_list, y_list, angle_list = path_planning(float(x),float(y), sensor)
+# ~ while True:
+	# ~ x = input("number of x ")
+	# ~ y = input("number of y ")
+	# ~ x_list, y_list, angle_list = path_planning(float(x),float(y), sensor)
 	
-	x_y_graph(x_list, y_list)
-	x_y_graph2(x_list, y_list)
-	angle_graph(angle_list)
+	# ~ x_y_graph(x_list, y_list)
+	# ~ x_y_graph2(x_list, y_list)
+	# ~ angle_graph(angle_list)
 	
 	
 	
@@ -221,6 +238,11 @@ while True:
 	
 # ~ control_speed(None,None)
 # ~ time.sleep(2)
-# ~ control_speed(1,1)
-# ~ time.sleep(2)
-# ~ control_speed(None,None)
+control_speed(1,1)
+time.sleep(0.25)
+control_speed(0.3,1)
+print("speed change")
+time.sleep(2)
+control_speed(None,None)
+# ~ while True:
+	# ~ print(Distance(0))
