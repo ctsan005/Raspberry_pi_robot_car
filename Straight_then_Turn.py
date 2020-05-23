@@ -17,7 +17,7 @@ sensor = adafruit_bno055.BNO055(i2c)
 
 input("press enter to start")
 start_time = time.time() 
-target = sensor.euler[0]
+target = mirror_sensor_angle ( sensor.euler[0] )
 print("initial target is : {}" .format(target))
 prev = 0
 sumError = 0
@@ -42,16 +42,16 @@ while( time.time() - start_time<2):
 	Angle.append(t)
 	Time.append(t)
 	Target.append(t)
-	Angle[t] = sensor.euler[0]
+	Angle[t] = mirror_sensor_angle( sensor.euler[0] )
 	Time[t] = t
 	Target[t] = target
 	t = t + 1
 	time.sleep(.02)
 
 print("finish straight")
-print("target is : {}" .format(sensor.euler[0]))
+print("target is : {}" .format(mirror_sensor_angle( sensor.euler[0] ) ))
 start_time = time.time()
-target = target - 5
+target = target + 30
 print(Distance(0))
 while( Distance(0) > .6): #time.time() - start_time < 4
 	rightspeed, leftspeed, prev, sumError = pid(target, sensor, rightspeed, leftspeed, prev, sumError, .5, .005, .4)
@@ -62,7 +62,7 @@ while( Distance(0) > .6): #time.time() - start_time < 4
 	Angle.append(t)
 	Time.append(t)
 	Target.append(t)
-	Angle[t] = sensor.euler[0]
+	Angle[t] = mirror_sensor_angle( sensor.euler[0] )
 	Time[t] = t
 	Target[t] = target
 	t = t + 1
@@ -74,5 +74,5 @@ kit.motor2.throttle = None
 kit.motor3.throttle = None
 kit.motor4.throttle = None
 print("finish turning")
-print("target is : {}" .format(sensor.euler[0]))
+print("target is : {}" .format(mirror_sensor_angle( sensor.euler[0] ) ))
 graph(Time, Angle, Time, Target)

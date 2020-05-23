@@ -20,13 +20,13 @@ def FWDKIN(x, y, radian, dt, L, VL, VR):
     
     else: #Turning case
         R = (L/2)*((VL + VR)/(VR - VL)) # Calculate radius of turn
-        w = (VR - VL / L) # Calcualte rate of rotation
+        w = ((VR - VL) / L) # Calcualte rate of rotation
         ICCx = (x - R*math.sin(radian))
         ICCy = (y + R*math.cos(radian))
 
         A = [[math.cos(w*dt), -1*math.sin(w*dt), 0],
              [math.sin(w*dt), math.cos(w*dt), 0],
-             [0, 0, 0]]
+             [0, 0, 1]]
         B = [[x - ICCx],
             [y - ICCy],
             [radian]]
@@ -37,4 +37,4 @@ def FWDKIN(x, y, radian, dt, L, VL, VR):
         ans = ans + C 
 #         print(ans)
     return ans 
-print(FWDKIN(0, 0, 0, .1, 1, 20, 15))
+# ~ print(FWDKIN(0, 0, 0, .1, 1, 20, 15))

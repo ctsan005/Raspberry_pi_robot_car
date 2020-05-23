@@ -1,5 +1,9 @@
 from adafruit_motorkit import MotorKit
 #use to control the right motor, 
+
+def mirror_sensor_angle(angle):
+	return 360 - angle
+    
 def rightmotorSet(number):
     if number > 1.0:
         number = 1.0
@@ -32,15 +36,19 @@ def convert_error(error, ratio = 0.01): #potential problem if our error is great
     
     
 def pid(target, sensor,  rightmotorSpeed, leftmotorSpeed, prevError, sumError, Kp , Ki , Kd):       #need to change the correction to also add speed to motor
-    current_angle = sensor.euler[0]
+    current_angle = mirror_sensor_angle( sensor.euler[0] ) #flip to unit circle conventions
     if(current_angle < -400):
         error = prevError       #handle error case with -1700 angle
         print("error happen with angle")
     else:    
-        error = target - current_angle #target is 0, which is straight, need to test the direction, not sure for now
+        #----------------------------------------------------------------------------------------------------------------------
+        # ~ error = target - current_angle #probably need to flip to change axis conventions
+        error = current_angle - target      #The correct version? need test physically 
+        #----------------------------------------------------------------------------------------------------------------------
     
     convert_speed = convert_error(error) #convert the error to speed that need to modify on the mootor
     if convert_speed < 0: # turn left
+        # ~ print("turning left")
         leftmotorSpeed = leftmotorSpeed - (convert_speed * Kp * -1) - ((convert_speed - prevError) * Kd) - (sumError * Ki)
         leftmotorSpeed = max(0.4,min(1,leftmotorSpeed))
         
@@ -50,6 +58,7 @@ def pid(target, sensor,  rightmotorSpeed, leftmotorSpeed, prevError, sumError, K
         prevError = convert_speed
         sumError += convert_speed
     elif convert_speed > 0: #turn right
+        # ~ print("turning right")
         rightmotorSpeed = rightmotorSpeed - (convert_speed * Kp) - ((convert_speed - prevError) * Kd) - (sumError * Ki)
         rightmotorSpeed = max(0.4,min(1,rightmotorSpeed))
         
