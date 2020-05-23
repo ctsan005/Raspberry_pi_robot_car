@@ -94,7 +94,18 @@ def pid(desired_value, actual_value, iteration_time , error_prior, integral_prio
 #     KD = 0
 #     bias = 0 
     error = convert_angle(desired_value - actual_value)
-    integral = integral_prior + error * iteration_time
+    
+    print("error for pid is: {}".format(error))
+    
+    if(error < -300 or error > 300):
+        error = error_prior
+    
+    if error > 2:
+        integral = 0
+    else:
+        integral = integral_prior + error * iteration_time
+    
+    
     derivative = (error - error_prior) / iteration_time
     output = kp * error + ki * integral + kd * derivative
     error_prior = error

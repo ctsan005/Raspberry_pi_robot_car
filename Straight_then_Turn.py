@@ -67,8 +67,12 @@ def test_PID(kp,ki,kd):
 	# ~ start_time = time.time()
 	target = (target + 10)%360
 	print(Distance(0))
+	count = 0
 	while( Distance(0) > .6): #time.time() - start_time < 4
 		output, prev, sumError = pid(target, mirror_sensor_angle( sensor.euler[0] ), time.time() - loop_time,  prev, sumError, kp, ki, kd) #.5, .005, .4
+		
+		# ~ if prev > 2:
+			# ~ sumError = 0
 		
 		loop_time = time.time()
 		
@@ -89,6 +93,7 @@ def test_PID(kp,ki,kd):
 		t = t + 1
 		time.sleep(.02)
 		print(Distance(0))
+
 		
 	kit.motor1.throttle = None
 	kit.motor2.throttle = None
