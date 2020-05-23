@@ -28,6 +28,7 @@ def graph(x1, y1, x2 ,y2):
     plt.plot(x2,y2, label = "Target")
     plt.xlabel('Time')
     plt.ylabel('Angle')
+    plt.legend()
     plt.show()
     
 def graph2(x1, y1, x2 ,y2):
@@ -35,6 +36,7 @@ def graph2(x1, y1, x2 ,y2):
     plt.plot(x2,y2, label = "Target")
     plt.xlabel('Time')
     plt.ylabel('Speed')
+    plt.legend()
     plt.show()
     
 def calibration():

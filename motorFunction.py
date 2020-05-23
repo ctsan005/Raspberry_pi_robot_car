@@ -35,7 +35,7 @@ def convert_error(error, ratio = 0.01):
         return error * ratio
     
     
-def pid(target, sensor,  rightmotorSpeed, leftmotorSpeed, prevError, sumError, Kp , Ki , Kd):       #need to change the correction to also add speed to motor
+def pid_old(target, sensor,  rightmotorSpeed, leftmotorSpeed, prevError, sumError, Kp , Ki , Kd):       #need to change the correction to also add speed to motor
     current_angle = mirror_sensor_angle( sensor.euler[0] ) #flip to unit circle conventions
     while (current_angle > 400) or (current_angle < -400):
         current_angle = mirror_sensor_angle( sensor.euler[0] ) #flip to unit circle conventions
@@ -44,17 +44,17 @@ def pid(target, sensor,  rightmotorSpeed, leftmotorSpeed, prevError, sumError, K
         # ~ print("error happen with angle")
     # ~ else:    
     #----------------------------------------------------------------------------------------------------------------------
-    # ~ error = target - current_angle #probably need to flip to change axis conventions
-    error = current_angle - target      #The correct version? need test physically 
+    error = target - current_angle #probably need to flip to change axis conventions
+    # ~ error = current_angle - target      #The correct version? need test physically 
     #----------------------------------------------------------------------------------------------------------------------
     
     convert_speed = convert_error(error) #convert the error to speed that need to modify on the mootor
     if convert_speed < 0: # turn left
         # ~ print("turning left")
-        leftmotorSpeed = leftmotorSpeed - (convert_speed * Kp * -1) - (sumError * Ki) - ((-1*convert_speed - prevError) * Kd) 
+        leftmotorSpeed = leftmotorSpeed - (convert_speed * Kp * -1) - (sumError * Ki) - ((convert_speed - prevError) * Kd) 
         leftmotorSpeed = max(0.3,min(1,leftmotorSpeed))
         
-        rightmotorSpeed = rightmotorSpeed + (convert_speed * Kp * -1) + (sumError * Ki) + ((-1*convert_speed - prevError) * Kd) 
+        rightmotorSpeed = rightmotorSpeed + (convert_speed * Kp * -1) + (sumError * Ki) + ((convert_speed - prevError) * Kd) 
         rightmotorSpeed = max(0.3,min(1,rightmotorSpeed))
         
         prevError = convert_speed
@@ -70,6 +70,45 @@ def pid(target, sensor,  rightmotorSpeed, leftmotorSpeed, prevError, sumError, K
         prevError = convert_speed
         sumError += convert_speed
     return rightmotorSpeed, leftmotorSpeed, prevError, sumError
+
+
+
+def convert_angle(error): 
+    if error < -180:
+        return (360 + error)
+        
+    elif error > 180:
+        return (-360 + error) 
+        
+    else:
+        return error
+        
+
+def pid(desired_value, actual_value, iteration_time , error_prior, integral_prior, kp,ki,kd):
+    # ~ actual_value = mirror_sensor_angle( sensor.euler[0] )
+    
+#     error_prior = 0
+#     integral_prior = 0
+#     KP = 0
+#     KI = 0
+#     KD = 0
+#     bias = 0 
+    error = convert_angle(desired_value - actual_value)
+    integral = integral_prior + error * iteration_time
+    derivative = (error - error_prior) / iteration_time
+    output = kp * error + ki * integral + kd * derivative
+    error_prior = error
+    integral_prior = integral
+    
+    return output, error_prior, integral_prior
+    
+# ~ a,b,c = pid(15,10,0.2,0,0, 0.02,0, 0)
+# ~ print(a,b,c)
+# ~ a,b,c = pid(10,5,0.2,b,c,1,0.01, 0.05)
+# ~ print(a,b,c)
+# ~ a,b,c = pid(10,17,0.2,b,c,1,0.01, 0.05)
+# ~ print(a,b,c)
+
 
 # ~ leftspeed = 1
 # ~ rightspeed = 1
