@@ -122,30 +122,17 @@ def path_planning(x,y, sensor):
 			else:						#quadrants 2
 				t_angle = 180 + t_angle
 				
-		angle = (t_angle + math.degrees(local_radians)) %360
-				
-		
-		
-		# ~ angle = (math.degrees(math.atan((y - local_y)/(x - local_x))) + math.degrees(local_radian)) % 360 # get the angle toward the destination 
-		
-		
+		angle = (t_angle + math.degrees(local_radians)) %360	
 		
 		
 		print("Target angle: {}" .format(angle))
 		print("Current angle: {}" .format(math.degrees( local_radians) ) )
-		# move to face the correct angle
-		# ~ if(abs(angle - local_angle) > 3):
-		
-		
 			
-		
-		
-		
-			
-		control_speed(leftspeed, rightspeed)		#control the speed of the car
+		# ~ control_speed(leftspeed, rightspeed)		#control the speed of the car
 		
 		if(check == 0):			#start the timer after the car move for the first time
 			start_time = time.time()
+			PID_loop_time = time.time()
 			check = 1
 			
 		# ~ print("local radian before update in degree: {}".format(math.degrees( local_radians)))
@@ -153,8 +140,13 @@ def path_planning(x,y, sensor):
 		
 		# go straight
 		# ~ if DLeft > 2 and DRight > 2:
-		rightspeed, leftspeed, prev, sumError = pid(angle, sensor, rightspeed, leftspeed, prev, sumError, .5, .01, .2)
+		output, prev, sumError = pid(angle, mirror_sensor_angle( sensor.euler[0] ), time.time() - PID_loop_time,  prev, sumError, .05, .012, .011) # .05 .012 .011
+		
+		rightspeed = max(0.3, min(1,rightspeed + output))
+		leftspeed = max(0.3, min(1,leftspeed - output))
 		control_speed(leftspeed, rightspeed)
+		
+		PID_loop_time = time.time() #iteration time for PID
 		
 		VL , VR = wheelspeed()
 		sample_time = time.time() - start_time
@@ -169,15 +161,7 @@ def path_planning(x,y, sensor):
 		# ~ print("local radian after update in degree: {}".format(math.degrees( local_radians)))
 		
 		total_distance = math.sqrt((x - local_x)**2 + (y - local_y)**2)		#update the total distance to the destination
-		
-		
-		#update the local x and y number
-		# ~ local_x = math.cos(math.radians(angle)) * dis_travel + local_x
-		# ~ local_y = math.sin(math.radians(angle)) * dis_travel + local_y
-		# use another function to help update local x and y and angle
-		
-		
-		
+			
 		print("distance need to travel: {} ".format(total_distance))
 		print("The current x and y is {}, {}".format(local_x, local_y))
 		print("Foward Kinematic angle: {}".format(math.degrees(local_radians)))
@@ -221,14 +205,14 @@ i2c = busio.I2C(board.SCL, board.SDA)
 sensor = adafruit_bno055.BNO055(i2c) 
 control_speed(None,None)
 # ~ sensor = calibration()
-# ~ while True:
-	# ~ x = input("number of x ")
-	# ~ y = input("number of y ")
-	# ~ x_list, y_list, angle_list = path_planning(float(x),float(y), sensor)
+while True:
+	x = input("number of x ")
+	y = input("number of y ")
+	x_list, y_list, angle_list = path_planning(float(x),float(y), sensor)
 	
-	# ~ x_y_graph(x_list, y_list)
-	# ~ x_y_graph2(x_list, y_list)
-	# ~ angle_graph(angle_list)
+	x_y_graph(x_list, y_list)
+	x_y_graph2(x_list, y_list)
+	angle_graph(angle_list)
 	
 	
 	
@@ -238,11 +222,11 @@ control_speed(None,None)
 	
 # ~ control_speed(None,None)
 # ~ time.sleep(2)
-control_speed(1,1)
-time.sleep(0.25)
-control_speed(0.3,1)
-print("speed change")
-time.sleep(2)
-control_speed(None,None)
+# ~ control_speed(1,1)
+# ~ time.sleep(0.25)
+# ~ control_speed(0.3,1)
+# ~ print("speed change")
+# ~ time.sleep(2)
+# ~ control_speed(None,None)
 # ~ while True:
 	# ~ print(Distance(0))

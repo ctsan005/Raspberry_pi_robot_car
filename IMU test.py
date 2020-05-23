@@ -13,8 +13,8 @@ calibrated = 0
         # ~ print("calibration done")
         # ~ calibrated = 1
     # ~ time.sleep(0.5)
-# ~ while True:
-    # ~ print("Temperature: {} degrees C".format(sensor.temperature))
+while True:
+    print("Temperature: {} degrees C".format(sensor.temperature))
     # ~ print("Accelerometer (m/s^2): {}".format(sensor.acceleration))
     # ~ print("Magnetometer (microteslas): {}".format(sensor.magnetic))
     # ~ print("Gyroscope (rad/sec): {}".format(sensor.gyro))
@@ -22,7 +22,7 @@ calibrated = 0
     # ~ print("Quaternion: {}".format(sensor.quaternion))
     # ~ print("Linear acceleration (m/s^2): {}".format(sensor.linear_acceleration))
     # ~ print("Gravity (m/s^2): {}".format(sensor.gravity))
-    # ~ print()
+    print()
  
     # ~ time.sleep(1)
 # ~ while True:

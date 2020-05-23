@@ -65,7 +65,7 @@ def test_PID(kp,ki,kd):
 	print("finish straight")
 	print("target is : {}" .format(mirror_sensor_angle( sensor.euler[0] ) ))
 	# ~ start_time = time.time()
-	target = (target + 10)%360
+	target = (target + 0)%360
 	print(Distance(0))
 	count = 0
 	while( Distance(0) > .6): #time.time() - start_time < 4
