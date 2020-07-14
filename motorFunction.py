@@ -1,9 +1,11 @@
 from adafruit_motorkit import MotorKit
-#use to control the right motor, 
 
-def mirror_sensor_angle(angle):
+#use to keep the angle from the sensor in the unit circle standard
+def mirror_sensor_angle(angle):     
 	return 360 - angle
     
+#--------------------below, do we really need it?----------------------------------------------
+#use to control the right motor 
 def rightmotorSet(number):
     if number > 1.0:
         number = 1.0
@@ -20,59 +22,10 @@ def leftmotorSet(number):
         number = 0
     kit.motor3.throttle = number
     kit.motor4.torottle = number
-    
-# ~ def convert_error(error):   #10 degree is very bad, so we convert 10 degree to 0.1 motor speed
-    # ~ return error * 0.01
-    
-def convert_error(error, ratio = 0.01): 
-    if error < -180:
-        return (360 + error) * ratio #number to define linear relationship between error and motor speed
-        
-    elif error > 180:
-        return (-360 + error) * ratio 
-        
-    else:
-        return error * ratio
-    
-    
-def pid_old(target, sensor,  rightmotorSpeed, leftmotorSpeed, prevError, sumError, Kp , Ki , Kd):       #need to change the correction to also add speed to motor
-    current_angle = mirror_sensor_angle( sensor.euler[0] ) #flip to unit circle conventions
-    while (current_angle > 400) or (current_angle < -400):
-        current_angle = mirror_sensor_angle( sensor.euler[0] ) #flip to unit circle conventions
-    # ~ if(current_angle < -400):
-        # ~ error = prevError       #handle error case with -1700 angle
-        # ~ print("error happen with angle")
-    # ~ else:    
-    #----------------------------------------------------------------------------------------------------------------------
-    error = target - current_angle #probably need to flip to change axis conventions
-    # ~ error = current_angle - target      #The correct version? need test physically 
-    #----------------------------------------------------------------------------------------------------------------------
-    
-    convert_speed = convert_error(error) #convert the error to speed that need to modify on the mootor
-    if convert_speed < 0: # turn left
-        # ~ print("turning left")
-        leftmotorSpeed = leftmotorSpeed - (convert_speed * Kp * -1) - (sumError * Ki) - ((convert_speed - prevError) * Kd) 
-        leftmotorSpeed = max(0.3,min(1,leftmotorSpeed))
-        
-        rightmotorSpeed = rightmotorSpeed + (convert_speed * Kp * -1) + (sumError * Ki) + ((convert_speed - prevError) * Kd) 
-        rightmotorSpeed = max(0.3,min(1,rightmotorSpeed))
-        
-        prevError = convert_speed
-        sumError += convert_speed
-    elif convert_speed > 0: #turn right
-        # ~ print("turning right")
-        rightmotorSpeed = rightmotorSpeed - (convert_speed * Kp) - (sumError * Ki) - ((convert_speed - prevError) * Kd) 
-        rightmotorSpeed = max(0.3,min(1,rightmotorSpeed))
-        
-        leftmotorSpeed = leftmotorSpeed + (convert_speed *Kp) + (sumError * Ki) + ((convert_speed - prevError) * Kd) 
-        leftmotorSpeed = max(0.3,min(1,leftmotorSpeed))
-        
-        prevError = convert_speed
-        sumError += convert_speed
-    return rightmotorSpeed, leftmotorSpeed, prevError, sumError
 
+#------------------------------------------------------------------
 
-
+#use to keep the angle in range, assume the angle not over 360 or -360
 def convert_angle(error): 
     if error < -180:
         return (360 + error)
@@ -83,24 +36,15 @@ def convert_angle(error):
     else:
         return error
         
-
+#use to return how to correct the motor speed speed to stay or reach some angle of the car to face
 def pid(desired_value, actual_value, iteration_time , error_prior, integral_prior, kp,ki,kd):
-    # ~ actual_value = mirror_sensor_angle( sensor.euler[0] )
+
+    error = convert_angle(desired_value - actual_value)     #the difference between what the car need to face and the actual angle it is facing
     
-#     error_prior = 0
-#     integral_prior = 0
-#     KP = 0
-#     KI = 0
-#     KD = 0
-#     bias = 0 
-    error = convert_angle(desired_value - actual_value)
-    
-    print("error for pid is: {}".format(error))
-    
-    if(error < -300 or error > 300):
+    if(error < -300 or error > 300):        #if the error is too much, it mean the sensor has some gitch reading the angle. Use the previous data for now.
         error = error_prior
     
-    if error > 2:
+    if error > 2:                   #pid function is also use for turning, this help prevent the integral value affect the calculation too much
         integral = 0
     else:
         integral = integral_prior + error * iteration_time
@@ -113,6 +57,11 @@ def pid(desired_value, actual_value, iteration_time , error_prior, integral_prio
     
     return output, error_prior, integral_prior
     
+
+
+
+
+#Testing
 # ~ a,b,c = pid(15,10,0.2,0,0, 0.02,0, 0)
 # ~ print(a,b,c)
 # ~ a,b,c = pid(10,5,0.2,b,c,1,0.01, 0.05)
