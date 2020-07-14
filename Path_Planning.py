@@ -66,16 +66,7 @@ def path_planning(x,y, sensor):
     leftspeed = 1
     rightspeed = 1
     
-    #---------------------------Probably don't need this section. This was originally for battery problem. need to review later------------------------------
-    control_speed(leftspeed, rightspeed)
-    time.sleep(0.2)
-    VL , VR = wheelspeed()
     
-    ans = FWDKIN(local_x, local_y, (local_radians - origin_radians), 0.2, 0.229, VL, VR)
-    local_x = ans[0][0]
-    local_y = ans[1][0]
-    local_radians = ans[2][0]
-    #--------------------------------------------------------------------------------------------------------------------------------------------------------
     #Initialize PID
     prev = 0
     sumError = 0
@@ -86,11 +77,7 @@ def path_planning(x,y, sensor):
     #Calculates distance magnitude from current location to target. 
     total_distance = math.sqrt(x**2 + y**2)
     	
-    #Append first data point to list-------------------CHECK IF WE REALLY NEED THIS I DONT THINK SO---------------------
-    x_list.append(local_x)
-    y_list.append(local_y)
-    angle_list.append(math.degrees(local_radians))
-    #---------------------------------------------------------------------------------------------------------------------
+
 	
     #Car will keep driving until it is less than .2m from target
     while (total_distance > 0.2):

@@ -4,26 +4,7 @@ from adafruit_motorkit import MotorKit
 def mirror_sensor_angle(angle):     
 	return 360 - angle
     
-#--------------------below, do we really need it?----------------------------------------------
-#use to control the right motor 
-def rightmotorSet(number):
-    if number > 1.0:
-        number = 1.0
-    if number < 0:
-        number = 0
-    kit.motor1.throttle = number
-    kit.motor2.torottle = number
-    
-#use to control the left motor   
-def leftmotorSet(number):
-    if number > 1.0:
-        number = 1.0
-    if number < 0:
-        number = 0
-    kit.motor3.throttle = number
-    kit.motor4.torottle = number
 
-#------------------------------------------------------------------
 
 #use to keep the angle in range, assume the angle not over 360 or -360
 def convert_angle(error): 
