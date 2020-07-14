@@ -28,6 +28,7 @@ def graph(x1, y1, x2 ,y2):
     plt.plot(x2,y2, label = "Target")
     plt.xlabel('Time')
     plt.ylabel('Angle')
+    plt.legend()
     plt.show()
     
 def graph2(x1, y1, x2 ,y2):
@@ -35,24 +36,26 @@ def graph2(x1, y1, x2 ,y2):
     plt.plot(x2,y2, label = "Target")
     plt.xlabel('Time')
     plt.ylabel('Speed')
+    plt.legend()
     plt.show()
     
 def calibration():
-	i2c = busio.I2C(board.SCL, board.SDA)
-	sensor = adafruit_bno055.BNO055(i2c)
-	calibrated = 0
-	while calibrated != 1 :
-		sys, gyro, accel, mag =  sensor.calibration_status
-		print("calibration: sys:{} gyro:{} accel:{} mag:{}".format(sys,gyro, accel, mag))
-		if sys == 3 and gyro == 3 and accel == 3 and mag == 3:
-			print("calibration done")
-			calibrated = 1
-		time.sleep(0.5)
-
-	print("Calibrated")
-	print("press enter to continue")
-	input()
-	return sensor
+    i2c = busio.I2C(board.SCL, board.SDA)
+    sensor = adafruit_bno055.BNO055(i2c)
+    calibrated = 0
+    while calibrated != 1 :
+        sys, gyro, accel, mag = sensor.calibration_status
+        print("calibration: sys:{} gyro:{} accel:{} mag:{}".format(sys,gyro, accel, mag))
+        
+        if sys == 3 and gyro == 3 and accel == 3 and mag == 3:
+            print("calibration done")
+            calibrated = 1
+        time.sleep(0.5)
+    print("Calibrated")
+	# ~ print("press enter to continue")
+    input("press enter to continue")
+    print("the angle is {}".format(sensor.euler[0]))
+    return sensor
 
 def straight_car(sensor, Kp, Ki, Kd):
     Time = [] #Store Data for time
@@ -94,13 +97,12 @@ def straight_car(sensor, Kp, Ki, Kd):
             Target[t] = target
             leftspeedlist.append(leftspeed)
             rightspeedlist.append(rightspeed)
-            
             t = t + 1
             time.sleep(sleeptime) #50 Hz
             count = count + 1
-            if(count > 0.3385/sleeptime):        #not exact 2 sec time, other reason lead to longer time, need adjust
-                print(time.time()-start_time)
-                break
+            # ~ if(count > 0.3385/sleeptime):        #not exact 2 sec time, other reason lead to longer time, need adjust
+                # ~ print(time.time()-start_time)
+                # ~ break
         except KeyboardInterrupt:
             kit.motor1.throttle = None
             kit.motor2.throttle = None
@@ -111,17 +113,17 @@ def straight_car(sensor, Kp, Ki, Kd):
             print("Receieve keyboard Interrupt and stop the straight_car function")
             break
             
-while True:
+# ~ while True:
     # ~ sensor = calibration()
-    sensor = adafruit_bno055.BNO055(i2c) 
-    while True:
-        kit.motor1.throttle = None
-        kit.motor2.throttle = None
-        kit.motor3.throttle = None
-        kit.motor4.throttle = None
-        input("Press enter to start straight car function and ctr-c to stop it")
-        Kp = input("what is Kp: ") #.5
-        Ki = input("what is Ki: ") #.01
-        Kd = input("what is Kd: ") #.2
-        straight_car(sensor, float(Kp), float(Ki), float(Kd))
+    # ~ sensor = adafruit_bno055.BNO055(i2c) 
+    # ~ while True:
+        # ~ kit.motor1.throttle = None
+        # ~ kit.motor2.throttle = None
+        # ~ kit.motor3.throttle = None
+        # ~ kit.motor4.throttle = None
+        # ~ input("Press enter to start straight car function and ctr-c to stop it")
+        # ~ Kp = input("what is Kp: ") #.5
+        # ~ Ki = input("what is Ki: ") #.01
+        # ~ Kd = input("what is Kd: ") #.2
+        # ~ straight_car(sensor, float(Kp), float(Ki), float(Kd))
 
