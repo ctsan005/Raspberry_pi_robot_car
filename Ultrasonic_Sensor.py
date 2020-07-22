@@ -25,11 +25,28 @@ def Range(voltage):
     feet = round(Range, 2)
     meter = feet * .0348 # Convert to meter
     return meter
-
+    
+def Wall_Distance(voltage):
+  distance = -0.467 * voltage + .987
+  return distance
+  
 def Distance(channel):
-	data = analogInput(channel)
-	voltage = Volts(data)
-	Distance = Range(voltage)
-	return Distance
+  data = analogInput(channel)
+  voltage = Volts(data)
+  if (channel == 3 or channel == 4): # channel 3 and 4 are for ir sensor distance
+    Distance = Wall_Distance(voltage)
+    return Distance
+  else:
+    Distance = Range(voltage)
+    return Distance
+	
 
-
+# ~ i = 0
+# ~ while i < 20:
+  # ~ print(Distance(0))
+  # ~ print(Distance(1))
+  # ~ print(Distance(2))
+  # ~ sleep(.2)
+  # ~ print()
+  # ~ i = i + 1
+  
