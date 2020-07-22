@@ -267,7 +267,7 @@ def crash_state():
 
 
 #need to finish later if need this function
-def destination_right():
+def destination_right(x,y,local_x,local_y,sensor):
     #Read new angle
     local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
     
@@ -293,7 +293,7 @@ def destination_right():
 
 
 #need to finish later if need this function
-def destination_left():
+def destination_left(x,y,local_x,local_y,sensor):
     #Read new angle
     local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
     
@@ -332,7 +332,7 @@ def change_state(curr_state, x,y,local_x,local_y, prev, sumError):
     if(total_distance < 0.2):
         temp_state = state.REACH_DESTINATION
         
-    elif(Distance(0) < 0.2):
+    elif(Distance(0) < 0.3):
         temp_state = state.CRASH
         
     elif((Distance(0) < 1.5) and (Distance(1) < 1.5)):
@@ -341,10 +341,10 @@ def change_state(curr_state, x,y,local_x,local_y, prev, sumError):
     elif((Distance(0) < 1.5) and (Distance(2) < 1.5)):
         temp_state = state.TURN_LEFT
 
-    elif(destination_left() and (Distance(3) < 0.6)):
+    elif(destination_left(x,y,local_x,local_y,sensor) and (Distance(3) < 0.6)):
         temp_state = state.WALL_LEFT
 
-    elif(destination_right() and (Distance(4) < 0.6)):
+    elif(destination_right(x,y,local_x,local_y,sensor) and (Distance(4) < 0.6)):
         temp_state = state.WALL_RIGHT
         
     else:
@@ -445,5 +445,5 @@ control_speed(None,None)
 while True:
 	x = input("number of x ")
 	y = input("number of y ")
-	x_list, y_list, angle_list = path_planning3(float(x),float(y), sensor)
+	path_planning3(float(x),float(y), sensor)
             
