@@ -24,7 +24,7 @@ class state(enum.Enum):
     WALL_RIGHT = 4
     WALL_LEFT = 5
     REACH_DESTINATION = 6
-    STUCK = 7
+    CRASH = 7
 
 
 def x_y_graph(x, y):
@@ -106,7 +106,7 @@ def default_state(x,y,local_x, local_y,sensor, leftspeed, rightspeed,prev,sumErr
 
     if Distance(0) < 0.6:
         print("Hit wall")
-        return
+        
     
     if x == 0:		#handle the special case of x = 0
         x = 0.000001
@@ -257,6 +257,13 @@ def wall_follow_left_state(local_x, local_y, sensor,origin_radians, start_time, 
     control_speed(leftspeed, rightspeed)
     time.sleep(.05)
     return start_time , local_x, local_y, local_radians, prev, sumError, leftspeed, rightspeed
+    
+
+#CRASH state
+def crash_state():
+    control_speed(None, None)
+    print("The car is going to crash")
+    return
 
 
 #need to finish later if need this function
@@ -270,27 +277,32 @@ def destination_right():
 def reach_destinition_state():
     control_speed(None, None)
     print("Reached destination, yeah!!!")
+    return
 
 def change_state(curr_state, x,y,local_x,local_y, prev, sumError):
     total_distance = math.sqrt((x - local_x)**2 + (y - local_y)**2)
 
     temp_state = state.NONE
-
-    if((Distance(0) < 1.5) and (Distance(1) < 1.5)):
+    
+    
+    if(total_distance < 0.2):
+        temp_state = state.REACH_DESTINATION
+        
+    elif(Distance(0) < 0.2):
+        temp_state = state.CRASH
+        
+    elif((Distance(0) < 1.5) and (Distance(1) < 1.5)):
         temp_state = state.TURN_RIGHT
 
     elif((Distance(0) < 1.5) and (Distance(2) < 1.5)):
         temp_state = state.TURN_LEFT
 
-    elif(destination_left() and (Distance(3) < 0.7)):
+    elif(destination_left() and (Distance(3) < 0.6)):
         temp_state = state.WALL_LEFT
 
-    elif(destination_right() and (Distance(4) < 0.7)):
+    elif(destination_right() and (Distance(4) < 0.6)):
         temp_state = state.WALL_RIGHT
-
-    elif(total_distance < 0.2):
-        temp_state = state.REACH_DESTINATION
-
+        
     else:
         temp_state = state.DEFAULT
 
@@ -325,41 +337,69 @@ def path_planning3(x,y, sensor):
     #Initialize PID
     prev = 0
     sumError = 0
+    start_time = time.time()
     
     	
     curr_state = state.DEFAULT
 	
     #Car will keep driving until it is less than .2m from target
     while (curr_state != state.REACH_DESTINATION):
+        print("Distance 0: {}".format(Distance(0)))
+        print("Distance 1: {}".format(Distance(1)))
+        print("Distance 2: {}".format(Distance(2)))
+        
         if(curr_state == state.DEFAULT):
+            print("current state is {}".format(curr_state))
             start_time , local_x, local_y, local_radians, leftspeed, rightspeed, prev, sumError = default_state(x,y,local_x, local_y,sensor, leftspeed, rightspeed,prev,sumError,start_time,origin_radians)
 
             curr_state, prev, sumError = change_state(curr_state, x,y,local_x,local_y, prev, sumError)
+            print("Next state is {}".format(curr_state))
+            
+        elif(curr_state == state.CRASH):
+            crash_state()
+            exit()
+        
 
 
         elif(curr_state == state.TURN_RIGHT):
+            print("current state is {}".format(curr_state))
             start_time , local_x, local_y, local_radians = turn_right_state(local_x, local_y, sensor,origin_radians)
 
             curr_state, prev, sumError = change_state(curr_state, x,y,local_x,local_y, prev, sumError)
+            print("Next state is {}".format(curr_state))
 
         elif(curr_state == state.TURN_LEFT):
+            print("current state is {}".format(curr_state))
             start_time , local_x, local_y, local_radians = turn_left_state(local_x, local_y, sensor,origin_radians)
 
             curr_state, prev, sumError = change_state(curr_state, x,y,local_x,local_y, prev, sumError)
+            print("Next state is {}".format(curr_state))
 
         elif(curr_state == state.WALL_LEFT):
+            print("current state is {}".format(curr_state))
             curr_state, local_x, local_y, local_radians, prev, sumError, leftspeed, rightspeed = wall_follow_left_state(local_x, local_y, sensor,origin_radians, start_time, prev, sumError, leftspeed, rightspeed)
 
             curr_state, prev, sumError = change_state(curr_state, x,y,local_x,local_y, prev, sumError)
+            print("Next state is {}".format(curr_state))
 
         elif(curr_state == state.WALL_RIGHT):
+            print("current state is {}".format(curr_state))
             start_time , local_x, local_y, local_radians, prev, sumError, leftspeed, rightspeed = wall_follow_right_state(local_x, local_y, sensor,origin_radians, start_time, prev, sumError, leftspeed, rightspeed)
 
             curr_state, prev, sumError = change_state(curr_state, x,y,local_x,local_y, prev, sumError)
+            print("Next state is {}".format(curr_state))
 
     reach_destinition_state()
+    exit()
 
 
 
-
+i2c = busio.I2C(board.SCL, board.SDA)
+sensor = adafruit_bno055.BNO055(i2c) 
+control_speed(None,None)
+# ~ sensor = calibration()
+while True:
+	x = input("number of x ")
+	y = input("number of y ")
+	x_list, y_list, angle_list = path_planning3(float(x),float(y), sensor)
             

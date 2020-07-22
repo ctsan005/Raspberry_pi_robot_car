@@ -42,9 +42,9 @@ def Distance(channel):
 	
 
 # ~ i = 0
-# ~ while i < 20:
-  # ~ print(Distance(0))
-  # ~ print(Distance(1))
+# ~ while i < 100:
+  # ~ print(Distance(3))
+  # ~ print(Distance(4))
   # ~ print(Distance(2))
   # ~ sleep(.2)
   # ~ print()
