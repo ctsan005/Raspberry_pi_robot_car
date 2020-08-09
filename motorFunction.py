@@ -32,6 +32,33 @@ def pid(desired_value, actual_value, iteration_time , error_prior, integral_prio
     
     
     derivative = (error - error_prior) / iteration_time
+    
+    
+    
+    output = kp * error + ki * integral + kd * derivative
+    error_prior = error
+    integral_prior = integral
+    
+    return output, error_prior, integral_prior
+    
+def pid_wall(desired_value, actual_value, iteration_time , error_prior, integral_prior, kp,ki,kd):
+
+    error = desired_value - actual_value
+    
+    
+    # ~ if error > 2:                   #pid function is also use for turning, this help prevent the integral value affect the calculation too much
+        # ~ integral = 0
+    # ~ else:
+        # ~ integral = integral_prior + error * iteration_time
+        
+    integral = integral_prior + error * iteration_time
+    
+    
+    derivative = (error - error_prior) / iteration_time
+    
+    if(derivative > 1):
+        derivative = 0
+    
     output = kp * error + ki * integral + kd * derivative
     error_prior = error
     integral_prior = integral

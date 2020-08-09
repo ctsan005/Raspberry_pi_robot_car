@@ -15,6 +15,14 @@ sensor = adafruit_bno055.BNO055(i2c)
 # ~ sensor = calibration() #calibrate sensor
 sensor = adafruit_bno055.BNO055(i2c) 
 
+def graph(x1, y1, x2 ,y2):
+    plt.plot(x1,y1, label = "line 1")
+    plt.plot(x2,y2, label = "Target")
+    plt.xlabel('Time')
+    plt.ylabel('Angle')
+    plt.legend()
+    plt.show()
+
 #use for testing the pid function with two parts, first going straight and then make a turn by setting the target angle slightly different. It will generate a graph for the angle the car that it faced vs the target of the angle that it should face.
 def test_PID(kp,ki,kd):
 	start_time = time.time() 			#use to keep track the begin time of the straight part
