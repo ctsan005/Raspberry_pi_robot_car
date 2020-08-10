@@ -61,6 +61,33 @@ def turn_left():
     kit.motor4.throttle = 1
     return
 
+#use to read the sensor multiple time and return the lowest number out of all the times it run
+def check_sensor(times, sensor_num):
+    dis = Distance(sensor_num)
+    for x in range(times):
+        temp = Distance(sensor_num)
+        if(temp < dis):
+            dis = temp
+    return dis
+
+#use to run the FWDKIN equation and update the location of the car
+def update_location(start_time, local_x, local_y, local_radians, origin_radians):
+    VL , VR = wheelspeed()
+    
+    #Calculate sameple time for foward kinematics
+    sample_time = time.time() - start_time
+    
+    
+    # distance between left and right wheel = 0.229m
+    #Updates current location of car.
+    ans =  FWDKIN(local_x, local_y, (local_radians - origin_radians), sample_time, 0.229, VL, VR)
+    start_time = time.time()
+    x = ans[0][0]
+    y = ans[1][0]
+    radian = origin_radians + ans[2][0]
+    return start_time, x,y,radian
+    
+
 def path_planning2(x,y, sensor):
     #Used to store current x y location
     local_x = 0
@@ -160,21 +187,12 @@ def path_planning2(x,y, sensor):
             rightspeed = max(0.3, min(1,rightspeed + output))
             leftspeed = max(0.3, min(1,leftspeed - output))
             control_speed(leftspeed, rightspeed)
-            VL , VR = wheelspeed()
             
             #Iteration time for PID
             PID_loop_time = time.time()
             
-            #Calculate sameple time for foward kinematics
-            sample_time = time.time() - start_time
-            start_time = time.time()
-            
-            # distance between left and right wheel = 0.229m
-            #Updates current location of car.
-            ans =  FWDKIN(local_x, local_y, (local_radians - origin_radians), sample_time, 0.229, VL, VR)
-            local_x = ans[0][0]
-            local_y = ans[1][0]
-            local_radians = origin_radians + ans[2][0]
+
+            start_time, local_x, local_y, local_radians = update_location(start_time, local_x, local_y, local_radians, origin_radians)
             
             #Update distance magnitude from current location to destination.
             total_distance = math.sqrt((x - local_x)**2 + (y - local_y)**2)
@@ -212,37 +230,31 @@ def path_planning2(x,y, sensor):
 
             time.sleep(0.5)
 
-            VL , VR = wheelspeed()
+            #Read new angle
+            local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
+            
+            #Prevents angle from being too large due to invalid data.
+            while math.degrees(local_radians) < -500 or math.degrees(local_radians) > 500:
+                local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
 
-            ans =  FWDKIN(local_x, local_y, (math.radians(mirror_sensor_angle(sensor.euler[0])) - origin_radians), (time.time() - current_time), 0.229, VL, VR)
-            local_x = ans[0][0]
-            local_y = ans[1][0]
-            local_radians = origin_radians + ans[2][0]
-
-            start_time = time.time()
+            start_time, local_x, local_y, local_radians = update_location(current_time, local_x, local_y, local_radians, origin_radians)
 
 
 
             #read the ir sensor mulitiple times and get the losest number
-            new_dis = check_dis
-            for x in range(3):
-                temp = Distance(3)
-                if(temp < new_dis):
-                    new_dis = temp
+            new_dis = check_sensor(3,3)
 
             #if the new dis is smaller than check_dis, that mean turning right did not avoid the obstacle yet, need to wall follow it to past it
             if((check_dis - new_dis) > 0.2):
                 
-                #init a variable to keep track the distance of the car and the obstacle around it
-                distance = 1
+                distance = check_sensor(3,3)
 
-                #read the sensor 3 times and get the smallest number to prevent one faluty number
-                for x in range(3):
-                    temp = Distance(3)
-                    if(temp < distance):
-                        distance = temp
-
+                
+                #init the variable for pid
+                prev = 0
+                sumError = 0
                 start_time = time.time()
+
                 #while the distance is less than 1, continue to follow the wall until past the obstacle
                 while(distance < 0.7):
                     
@@ -250,21 +262,16 @@ def path_planning2(x,y, sensor):
                     target_distance_wall = 0.4      #need to adjust later, a variable for the target distance to the wall
 
 
-                    #init the variable for pid
-                    prev = 0
-                    sumError = 0
-
-
                     output, prev, sumError = pid_wall(target_distance_wall, Distance(3), time.time() - start_time,  prev, sumError, 0.15, 0.036, 0.33) #Call the pid function to obtain the change needed for the motor
 
-                    VL , VR = wheelspeed()
+                    #Read new angle
+                    local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
+                    
+                    #Prevents angle from being too large due to invalid data.
+                    while math.degrees(local_radians) < -500 or math.degrees(local_radians) > 500:
+                        local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
 
-                    ans =  FWDKIN(local_x, local_y, (math.radians(mirror_sensor_angle(sensor.euler[0])) - origin_radians), (time.time() - current_time), 0.229, VL, VR)
-                    local_x = ans[0][0]
-                    local_y = ans[1][0]
-                    local_radians = origin_radians + ans[2][0]
-
-                    start_time = time.time()
+                    start_time, local_x, local_y, local_radians = update_location(current_time, local_x, local_y, local_radians, origin_radians)
 
 
                     #update the motor speed
@@ -275,11 +282,7 @@ def path_planning2(x,y, sensor):
                     time.sleep(.05)
 
                     #read the sensor 3 times and get the smallest number to prevent one faluty number
-                    distance = Distance(3)
-                    for x in range(3):
-                        temp = Distance(3)
-                        if(temp < distance):
-                            distance = temp
+                    distance = check_sensor(3,3)
 
 
 
@@ -300,14 +303,14 @@ def path_planning2(x,y, sensor):
 
             time.sleep(0.5)
 
-            VL , VR = wheelspeed()
+             #Read new angle
+            local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
+            
+            #Prevents angle from being too large due to invalid data.
+            while math.degrees(local_radians) < -500 or math.degrees(local_radians) > 500:
+                local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
 
-            ans =  FWDKIN(local_x, local_y, (math.radians(mirror_sensor_angle(sensor.euler[0])) - origin_radians), (time.time() - current_time), 0.229, VL, VR)
-            local_x = ans[0][0]
-            local_y = ans[1][0]
-            local_radians = origin_radians + ans[2][0]
-
-            start_time = time.time()
+            start_time, local_x, local_y, local_radians = update_location(current_time, local_x, local_y, local_radians, origin_radians)
 
 
 
@@ -345,14 +348,14 @@ def path_planning2(x,y, sensor):
 
                     output, prev, sumError = pid_wall(target_distance_wall, Distance(3), time.time() - start_time,  prev, sumError, 0.15, 0.036, 0.33) #Call the pid function to obtain the change needed for the motor
 
-                    VL , VR = wheelspeed()
+                     #Read new angle
+                    local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
+                    
+                    #Prevents angle from being too large due to invalid data.
+                    while math.degrees(local_radians) < -500 or math.degrees(local_radians) > 500:
+                        local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
 
-                    ans =  FWDKIN(local_x, local_y, (math.radians(mirror_sensor_angle(sensor.euler[0])) - origin_radians), (time.time() - current_time), 0.229, VL, VR)
-                    local_x = ans[0][0]
-                    local_y = ans[1][0]
-                    local_radians = origin_radians + ans[2][0]
-
-                    start_time = time.time()
+                    start_time, local_x, local_y, local_radians = update_location(current_time, local_x, local_y, local_radians, origin_radians)
 
 
                     #update the motor speed
