@@ -46,12 +46,20 @@ def mirror_sensor_angle(angle):
 	return 360 - angle
 
 #need to complete later after testing number
-def turn_right(left_dis, middle_dis):
-    return true
+def turn_right():
+    kit.motor1.throttle = 1
+    kit.motor2.throttle = 1
+    kit.motor3.throttle = 0.3
+    kit.motor4.throttle = 0.3
+    return
 
 #need to complete later after testing number
-def turn_left(right_dis, middle_dis):
-    return true
+def turn_left():
+    kit.motor1.throttle = 0.3
+    kit.motor2.throttle = 0.3
+    kit.motor3.throttle = 1
+    kit.motor4.throttle = 1
+    return
 
 def path_planning2(x,y, sensor):
     #Used to store current x y location
@@ -193,33 +201,51 @@ def path_planning2(x,y, sensor):
         if((left_obstacle == True) and (middle_obstacle == True) ):
             
             #need to read the ir sensor first and use to determine is the obstacle a long obstacle
-            check_dis = read_left_ir()
+            check_dis = Distance(3)
 
             #turn for a short amount of time like 0.2 second
-            turn_right(Distance(1),Distance(0))
+            # idea: turn until the front sensor do not sense the obstacle?
+
+            turn_right()
+
+            current_time = time.time()
+
+            time.sleep(0.5)
+
+            VL , VR = wheelspeed()
+
+            ans =  FWDKIN(local_x, local_y, (math.radians(mirror_sensor_angle(sensor.euler[0])) - origin_radians), (time.time() - current_time), 0.229, VL, VR)
+            local_x = ans[0][0]
+            local_y = ans[1][0]
+            local_radians = origin_radians + ans[2][0]
+
+            start_time = time.time()
+
+
 
             #read the ir sensor mulitiple times and get the losest number
             new_dis = check_dis
             for x in range(3):
-                temp = read_left_ir()
+                temp = Distance(3)
                 if(temp < new_dis):
                     new_dis = temp
 
             #if the new dis is smaller than check_dis, that mean turning right did not avoid the obstacle yet, need to wall follow it to past it
-            if(new_dis != check_dis):
+            if((check_dis - new_dis) > 0.2):
                 
                 #init a variable to keep track the distance of the car and the obstacle around it
-                distance = 2
+                distance = 1
 
                 #read the sensor 3 times and get the smallest number to prevent one faluty number
                 for x in range(3):
-                    temp = read_left_ir()
+                    temp = Distance(3)
                     if(temp < distance):
                         distance = temp
 
+                start_time = time.time()
                 #while the distance is less than 1, continue to follow the wall until past the obstacle
-                while(distance < 1):
-                    start_time = time.time()
+                while(distance < 0.7):
+                    
 
                     target_distance_wall = 0.4      #need to adjust later, a variable for the target distance to the wall
 
@@ -228,13 +254,18 @@ def path_planning2(x,y, sensor):
                     prev = 0
                     sumError = 0
 
-                    #use for pid function to tell the iteration time for the pid funciton
-                    loop_time = time.time()
-                    time.sleep(.05)
 
-                    output, prev, sumError = pid_wall(target_distance_wall, Distance(3), time.time() - loop_time,  prev, sumError, 0.15, 0.036, 0.33) #Call the pid function to obtain the change needed for the motor
+                    output, prev, sumError = pid_wall(target_distance_wall, Distance(3), time.time() - start_time,  prev, sumError, 0.15, 0.036, 0.33) #Call the pid function to obtain the change needed for the motor
 
-                    loop_time = time.time()			#update the iteration time
+                    VL , VR = wheelspeed()
+
+                    ans =  FWDKIN(local_x, local_y, (math.radians(mirror_sensor_angle(sensor.euler[0])) - origin_radians), (time.time() - current_time), 0.229, VL, VR)
+                    local_x = ans[0][0]
+                    local_y = ans[1][0]
+                    local_radians = origin_radians + ans[2][0]
+
+                    start_time = time.time()
+
 
                     #update the motor speed
                     rightspeed = max(0.3, min(1,rightspeed - output))
@@ -244,16 +275,96 @@ def path_planning2(x,y, sensor):
                     time.sleep(.05)
 
                     #read the sensor 3 times and get the smallest number to prevent one faluty number
-                    dstance = read_left_ir()
+                    distance = Distance(3)
                     for x in range(3):
-                        temp = read_left_ir()
+                        temp = Distance(3)
                         if(temp < distance):
                             distance = temp
 
 
 
-
-
-
+        #case 3: turn left and pass the obstacle
+        #identify an obstacle so need to turn left, if it is a long obstacle, use wall following to following it until it past the obstacle
+        #important: need to find a way to update the location within this case
+        if((right_obstacle == True) and (middle_obstacle == True) ):
             
+            #need to read the ir sensor first and use to determine is the obstacle a long obstacle
+            check_dis = Distance(4)
 
+            #turn for a short amount of time like 0.2 second
+            # idea: turn until the front sensor do not sense the obstacle?
+
+            turn_left()
+
+            current_time = time.time()
+
+            time.sleep(0.5)
+
+            VL , VR = wheelspeed()
+
+            ans =  FWDKIN(local_x, local_y, (math.radians(mirror_sensor_angle(sensor.euler[0])) - origin_radians), (time.time() - current_time), 0.229, VL, VR)
+            local_x = ans[0][0]
+            local_y = ans[1][0]
+            local_radians = origin_radians + ans[2][0]
+
+            start_time = time.time()
+
+
+
+            #read the ir sensor mulitiple times and get the losest number
+            new_dis = check_dis
+            for x in range(4):
+                temp = Distance(4)
+                if(temp < new_dis):
+                    new_dis = temp
+
+            #if the new dis is smaller than check_dis, that mean turning right did not avoid the obstacle yet, need to wall follow it to past it
+            if((check_dis - new_dis) > 0.2):
+                
+                #init a variable to keep track the distance of the car and the obstacle around it
+                distance = 1
+
+                #read the sensor 3 times and get the smallest number to prevent one faluty number
+                for x in range(3):
+                    temp = Distance(4)
+                    if(temp < distance):
+                        distance = temp
+
+                start_time = time.time()
+                #while the distance is less than 1, continue to follow the wall until past the obstacle
+                while(distance < 0.7):
+                    
+
+                    target_distance_wall = 0.4      #need to adjust later, a variable for the target distance to the wall
+
+
+                    #init the variable for pid
+                    prev = 0
+                    sumError = 0
+
+
+                    output, prev, sumError = pid_wall(target_distance_wall, Distance(3), time.time() - start_time,  prev, sumError, 0.15, 0.036, 0.33) #Call the pid function to obtain the change needed for the motor
+
+                    VL , VR = wheelspeed()
+
+                    ans =  FWDKIN(local_x, local_y, (math.radians(mirror_sensor_angle(sensor.euler[0])) - origin_radians), (time.time() - current_time), 0.229, VL, VR)
+                    local_x = ans[0][0]
+                    local_y = ans[1][0]
+                    local_radians = origin_radians + ans[2][0]
+
+                    start_time = time.time()
+
+
+                    #update the motor speed
+                    rightspeed = max(0.3, min(1,rightspeed - output))
+                    leftspeed = max(0.3, min(1,leftspeed + output))
+
+                    control_speed(leftspeed, rightspeed)
+                    time.sleep(.05)
+
+                    #read the sensor 3 times and get the smallest number to prevent one faluty number
+                    distance = Distance(3)
+                    for x in range(3):
+                        temp = Distance(3)
+                        if(temp < distance):
+                            distance = temp
