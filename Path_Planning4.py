@@ -15,6 +15,19 @@ import enum
 Left = 1 # for the left sensor
 Right = 2 # for the right sensor
 kit = MotorKit()
+x = None
+y = None
+local_x = None
+local_y = None
+sensor = None
+leftspeed = None
+rightspeed = None
+prev = None 
+sumError = None
+start_time = None
+origin_radians = None
+curr_state = None
+
 
 class state(enum.Enum): 
     NONE = 0
@@ -24,7 +37,7 @@ class state(enum.Enum):
     WALL_RIGHT = 4
     WALL_LEFT = 5
     REACH_DESTINATION = 6
-    STUCK = 7
+    CRASH = 7
 
 
 def x_y_graph(x, y):
@@ -101,12 +114,12 @@ def update_location(start_time, local_x, local_y, local_radians, origin_radians)
 
 #the state where using the pid function to do simple movement to move toward the destination
 #This case handle when there is no obstacle
-def default_state(x,y,local_x, local_y,sensor, leftspeed, rightspeed,prev,sumError,start_time,origin_radians):
+def default_state():
 
 
     if Distance(0) < 0.6:
         print("Hit wall")
-        return
+        
     
     if x == 0:		#handle the special case of x = 0
         x = 0.000001
@@ -168,7 +181,7 @@ def default_state(x,y,local_x, local_y,sensor, leftspeed, rightspeed,prev,sumErr
 
 
 #state to turn right when sense an obstacle
-def turn_right_state(local_x, local_y, sensor,origin_radians):
+def turn_right_state():
     #turn for a short amount of time like 0.2 second
     # idea: turn until the front sensor do not sense the obstacle?
 
@@ -190,7 +203,7 @@ def turn_right_state(local_x, local_y, sensor,origin_radians):
 
 
 #state to turn left when sense an obstacle
-def turn_left_state(local_x, local_y, sensor,origin_radians):
+def turn_left_state():
     turn_left()
 
     current_time = time.time()
@@ -208,7 +221,7 @@ def turn_left_state(local_x, local_y, sensor,origin_radians):
     return start_time , local_x, local_y, local_radians
 
 #wall follow right state
-def wall_follow_right_state(local_x, local_y, sensor,origin_radians, start_time, prev, sumError, leftspeed, rightspeed):
+def wall_follow_right_state():
     target_distance_wall = 0.4      #need to adjust later, a variable for the target distance to the wall
 
 
@@ -234,7 +247,7 @@ def wall_follow_right_state(local_x, local_y, sensor,origin_radians, start_time,
     
 
 #wall follow left state
-def wall_follow_left_state(local_x, local_y, sensor,origin_radians, start_time, prev, sumError, leftspeed, rightspeed):
+def wall_follow_left_state():
     target_distance_wall = 0.4      #need to adjust later, a variable for the target distance to the wall
 
 
@@ -257,40 +270,96 @@ def wall_follow_left_state(local_x, local_y, sensor,origin_radians, start_time, 
     control_speed(leftspeed, rightspeed)
     time.sleep(.05)
     return start_time , local_x, local_y, local_radians, prev, sumError, leftspeed, rightspeed
+    
+
+#CRASH state
+def crash_state():
+    control_speed(None, None)
+    print("The car is going to crash")
+    return
 
 
 #need to finish later if need this function
 def destination_left():
-    return True
+    #Read new angle
+    local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
+    
+    #Prevents angle from being too large due to invalid data.
+    while math.degrees(local_radians) < -500 or math.degrees(local_radians) > 500:
+        local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
+
+    c_angle = math.degrees(local_radians)
+
+    t_angle = math.degrees ( math.atan( (y - local_y)/(x - local_x) ) )
+
+    if(c_angle >= 180):
+        if( (t_angle > (c_angle - 180)) and ((t_angle < c_angle))):
+            return True
+        else:
+            return False
+
+    else:
+        if( (t_angle > (360 + c_angle - 180)) or ((t_angle < c_angle))):
+            return True
+        else:
+            return False
+
+
 #need to finish later if need this function
 def destination_right():
-    return True
+    #Read new angle
+    local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
+    
+    #Prevents angle from being too large due to invalid data.
+    while math.degrees(local_radians) < -500 or math.degrees(local_radians) > 500:
+        local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
+
+    c_angle = math.degrees(local_radians)
+
+    t_angle = math.degrees ( math.atan( (y - local_y)/(x - local_x) ) )
+
+    if(c_angle <= 180):
+        if( (t_angle < (c_angle + 180)) and ((t_angle + c_angle))):
+            return True
+        else:
+            return False
+
+    else:
+        if( (t_angle < (c_angle - 180)) or ((t_angle > c_angle))):
+            return True
+        else:
+            return False
 
 #the car reached the destination, stop the car and print a statement that indicate finish
 def reach_destinition_state():
     control_speed(None, None)
     print("Reached destination, yeah!!!")
+    return
 
-def change_state(curr_state, x,y,local_x,local_y, prev, sumError):
+def change_state():
     total_distance = math.sqrt((x - local_x)**2 + (y - local_y)**2)
 
     temp_state = state.NONE
-
-    if((Distance(0) < 1.5) and (Distance(1) < 1.5)):
+    
+    
+    if(total_distance < 0.2):
+        temp_state = state.REACH_DESTINATION
+        
+    elif(Distance(0) < 0.2):
+        temp_state = state.CRASH
+        
+    elif((Distance(0) < 1.5) and (Distance(1) < 1.5)):
         temp_state = state.TURN_RIGHT
 
     elif((Distance(0) < 1.5) and (Distance(2) < 1.5)):
         temp_state = state.TURN_LEFT
 
-    elif(destination_left() and (Distance(3) < 0.7)):
+    elif(destination_left() and (Distance(3) < 0.6)):
         temp_state = state.WALL_LEFT
 
-    elif(destination_right() and (Distance(4) < 0.7)):
+    elif(destination_right() and (Distance(4) < 0.6)):
         temp_state = state.WALL_RIGHT
-
-    elif(total_distance < 0.2):
-        temp_state = state.REACH_DESTINATION
-
+        
     else:
         temp_state = state.DEFAULT
 
@@ -302,7 +371,9 @@ def change_state(curr_state, x,y,local_x,local_y, prev, sumError):
 
     return curr_state, prev, sumError
 
-def path_planning3(x,y, sensor):
+def path_planning3(target_x,target_y):
+    x = target_x
+    y = target_y
     #Used to store current x y location
     local_x = 0
     local_y = 0
@@ -325,41 +396,69 @@ def path_planning3(x,y, sensor):
     #Initialize PID
     prev = 0
     sumError = 0
+    start_time = time.time()
     
     	
     curr_state = state.DEFAULT
 	
     #Car will keep driving until it is less than .2m from target
     while (curr_state != state.REACH_DESTINATION):
+        print("Distance 0: {}".format(Distance(0)))
+        print("Distance 1: {}".format(Distance(1)))
+        print("Distance 2: {}".format(Distance(2)))
+        
         if(curr_state == state.DEFAULT):
-            start_time , local_x, local_y, local_radians, leftspeed, rightspeed, prev, sumError = default_state(x,y,local_x, local_y,sensor, leftspeed, rightspeed,prev,sumError,start_time,origin_radians)
+            print("current state is {}".format(curr_state))
+            default_state()
 
-            curr_state, prev, sumError = change_state(curr_state, x,y,local_x,local_y, prev, sumError)
+            change_state()
+            print("Next state is {}".format(curr_state))
+            
+        elif(curr_state == state.CRASH):
+            crash_state()
+            exit()
+        
 
 
         elif(curr_state == state.TURN_RIGHT):
-            start_time , local_x, local_y, local_radians = turn_right_state(local_x, local_y, sensor,origin_radians)
+            print("current state is {}".format(curr_state))
+            turn_right_state()
 
-            curr_state, prev, sumError = change_state(curr_state, x,y,local_x,local_y, prev, sumError)
+            change_state()
+            print("Next state is {}".format(curr_state))
 
         elif(curr_state == state.TURN_LEFT):
-            start_time , local_x, local_y, local_radians = turn_left_state(local_x, local_y, sensor,origin_radians)
+            print("current state is {}".format(curr_state))
+            turn_left_state()
 
-            curr_state, prev, sumError = change_state(curr_state, x,y,local_x,local_y, prev, sumError)
+            change_state()
+            print("Next state is {}".format(curr_state))
 
         elif(curr_state == state.WALL_LEFT):
-            curr_state, local_x, local_y, local_radians, prev, sumError, leftspeed, rightspeed = wall_follow_left_state(local_x, local_y, sensor,origin_radians, start_time, prev, sumError, leftspeed, rightspeed)
+            print("current state is {}".format(curr_state))
+            wall_follow_left_state()
 
-            curr_state, prev, sumError = change_state(curr_state, x,y,local_x,local_y, prev, sumError)
+            change_state()
+            print("Next state is {}".format(curr_state))
 
         elif(curr_state == state.WALL_RIGHT):
-            start_time , local_x, local_y, local_radians, prev, sumError, leftspeed, rightspeed = wall_follow_right_state(local_x, local_y, sensor,origin_radians, start_time, prev, sumError, leftspeed, rightspeed)
+            print("current state is {}".format(curr_state))
+            wall_follow_right_state()
 
-            curr_state, prev, sumError = change_state(curr_state, x,y,local_x,local_y, prev, sumError)
+            change_state()
+            print("Next state is {}".format(curr_state))
 
     reach_destinition_state()
+    exit()
 
 
 
-
+i2c = busio.I2C(board.SCL, board.SDA)
+sensor = adafruit_bno055.BNO055(i2c) 
+control_speed(None,None)
+# ~ sensor = calibration()
+while True:
+	x = input("number of x ")
+	y = input("number of y ")
+	path_planning3(float(x),float(y))
             
