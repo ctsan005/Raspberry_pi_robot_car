@@ -280,7 +280,7 @@ def crash_state():
 
 
 #need to finish later if need this function
-def destination_left():
+def destination_right():
     #Read new angle
     local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
     
@@ -306,7 +306,7 @@ def destination_left():
 
 
 #need to finish later if need this function
-def destination_right():
+def destination_left():
     #Read new angle
     local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
     
@@ -319,7 +319,7 @@ def destination_right():
     t_angle = math.degrees ( math.atan( (y - local_y)/(x - local_x) ) )
 
     if(c_angle <= 180):
-        if( (t_angle < (c_angle + 180)) and ((t_angle + c_angle))):
+        if( (t_angle <= (c_angle + 180)) and ((t_angle > c_angle))):
             return True
         else:
             return False
