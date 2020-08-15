@@ -363,10 +363,13 @@ def path_planning3(x,y, sensor):
     local_x = 0
     local_y = 0
     	
-    # #Initialize list for graph
-    # x_list = []
-    # y_list = []
-    # angle_list = []	
+    #Initialize list for graph
+    x_list = []
+    y_list = []
+    angle_list = []	
+    time_list = []
+
+    begin_time = time.time()
     
     #Read the current angle we are facing
     local_radians = math.radians(mirror_sensor_angle(sensor.euler[0]))
@@ -401,7 +404,7 @@ def path_planning3(x,y, sensor):
             
         elif(curr_state == state.CRASH):
             crash_state()
-            exit()
+            return x_list,y_list,angle_list,time_list
         
 
 
@@ -433,8 +436,14 @@ def path_planning3(x,y, sensor):
             curr_state, prev, sumError = change_state(curr_state, x,y,local_x,local_y, prev, sumError)
             print("Next state is {}".format(curr_state))
 
+        #Append data points
+        x_list.append(local_x)
+        y_list.append(local_y)
+        angle_list.append(math.degrees(local_radians))
+        time_list.append(time.time() - begin_time)
+
     reach_destinition_state()
-    exit()
+    return x_list,y_list,angle_list,time_list
 
 
 
