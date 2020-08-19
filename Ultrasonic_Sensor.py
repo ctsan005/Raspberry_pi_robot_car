@@ -50,14 +50,14 @@ def init_distance():
     sensor_val[2][a] = Range(Volts(analogInput(2)))
     sensor_val[3][a] = Wall_Distance(Volts(analogInput(3)))
     sensor_val[4][a] = Wall_Distance(Volts(analogInput(4)))
-    sleep(0.1)
+    sleep(0.11)
 
   #get the median for each sensor reading
   for a in range(5):
     distance[a] = median(sensor_val[a])
 
   print("Finish init the sensor distance, ready to run")
-  print(distance)
+  print("The init distance for all sensor are: {}".format(distance))
   return True
 
   
@@ -66,6 +66,8 @@ def init_distance():
 
   
 def Distance(channel):
+  # this variable is for how many percent to trust the new reading for the sensor value
+  percent = 0.99
   global distance
   data = analogInput(channel)
   voltage = Volts(data)
@@ -74,8 +76,19 @@ def Distance(channel):
   else:
     Distance = Range(voltage)
   
-  distance[channel] = Distance * 0.15 + distance[channel] * 0.85
+  distance[channel] = Distance * percent + distance[channel] * (1-percent)
   return round(distance[channel],2)
+  
+# ~ def Distance_old(channel):
+  # ~ global distance
+  # ~ data = analogInput(channel)
+  # ~ voltage = Volts(data)
+  # ~ if (channel == 3 or channel == 4): # channel 3 and 4 are for ir sensor distance
+    # ~ Distance = Wall_Distance(voltage)
+  # ~ else:
+    # ~ Distance = Range(voltage)
+
+  # ~ return round(Distance,2)
 	
 
 # ~ i = 0
