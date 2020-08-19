@@ -1,7 +1,12 @@
 # Importing modules
 import spidev # To communicate with SPI devices
 from time import sleep  # To add delay
-import statistics 
+from statistics import median
+import numpy
+
+#keep track the last distance value for each sensor, need to call the init_distance function to get the best result before run
+distance = [0,0,0,0,0]
+
 
 # Start SPI connection
 spi = spidev.SpiDev() # Created an object
@@ -25,82 +30,60 @@ def Range(voltage):
     Range = voltage * (512/5)
     feet = round(Range, 2)
     meter = feet * .0348 # Convert to meter
-    return round(meter, 2)
+    return meter
     
 def Wall_Distance(voltage):
   distance = -0.467 * voltage + .987
-  return round(distance, 2)
+  return distance
+
+def init_distance():
+  #get the array from global
+  global distance
+
+  #create a 2d array to store the result for the collection of data
+  sensor_val = numpy.zeros((5, 5))
+  
+  #read the value 5 times for each sensor
+  for a in range(5):
+    sensor_val[0][a] = Range(Volts(analogInput(0)))
+    sensor_val[1][a] = Range(Volts(analogInput(1)))
+    sensor_val[2][a] = Range(Volts(analogInput(2)))
+    sensor_val[3][a] = Wall_Distance(Volts(analogInput(3)))
+    sensor_val[4][a] = Wall_Distance(Volts(analogInput(4)))
+    sleep(0.1)
+
+  #get the median for each sensor reading
+  for a in range(5):
+    distance[a] = median(sensor_val[a])
+
+  print("Finish init the sensor distance, ready to run")
+  print(distance)
+  return True
+
+  
+
+
+
   
 def Distance(channel):
-  # ~ data = analogInput(channel)
-  # ~ voltage = Volts(data)
-  # ~ if (channel == 3 or channel == 5): # channel 3 and 4 are for ir sensor distance
-    # ~ Distance = Wall_Distance(voltage)
-    # ~ return Distance
-  # ~ else:
-    # ~ Distance = Range(voltage)
-    # ~ return Distance
-    
-    
-  voltage = []
-  voltage.append(Volts(analogInput(channel)))  
-  # ~ sleep(0.06)
-  # ~ voltage.append(Volts(analogInput(channel))) 
-  # ~ sleep(0.06)
-  # ~ voltage.append(Volts(analogInput(channel))) 
-  # ~ sleep(0.06)
-  # ~ voltage.append(Volts(analogInput(channel))) 
-  # ~ sleep(0.06)
-  # ~ voltage.append(Volts(analogInput(channel))) 
-
-  
-  median_volt = statistics.median(voltage)
-  
-  if (channel == 3 or channel == 5): # channel 3 and 4 are for ir sensor distance
-    Distance = Wall_Distance(median_volt)
-    return Distance
-  else:
-    Distance = Range(median_volt)
-    return Distance
-	
-def Distance2(channel, last_val):
-  # ~ data = analogInput(channel)
-  # ~ voltage = Volts(data)
-  # ~ if (channel == 3 or channel == 5): # channel 3 and 4 are for ir sensor distance
-    # ~ Distance = Wall_Distance(voltage)
-    # ~ return Distance
-  # ~ else:
-    # ~ Distance = Range(voltage)
-    # ~ return Distance
-    
-    
-  voltage = Volts(analogInput(channel))
-  # ~ sleep(0.06)
-  # ~ voltage.append(Volts(analogInput(channel))) 
-  # ~ sleep(0.06)
-  # ~ voltage.append(Volts(analogInput(channel))) 
-  # ~ sleep(0.06)
-  # ~ voltage.append(Volts(analogInput(channel))) 
-  # ~ sleep(0.06)
-  # ~ voltage.append(Volts(analogInput(channel))) 
-
-  
-  if (channel == 3 or channel == 5): # channel 3 and 4 are for ir sensor distance
+  global distance
+  data = analogInput(channel)
+  voltage = Volts(data)
+  if (channel == 3 or channel == 4): # channel 3 and 4 are for ir sensor distance
     Distance = Wall_Distance(voltage)
-    return Distance * 0.2 + last_val * 0.8
   else:
     Distance = Range(voltage)
-    return Distance * 0.2 + last_val * 0.8
-    
-    
-i = 0
-last_val = 0
-while i < 100:
-  print(Volts(analogInput(0)))
-  print(analogInput(0))
-  last_val = Distance2(0,last_val)
-  print(last_val)
-  sleep(.06)
-  print()
-  i = i + 1
+  
+  distance[channel] = Distance * 0.15 + distance[channel] * 0.85
+  return round(distance[channel],2)
+	
+
+# ~ i = 0
+# ~ while i < 100:
+  # ~ print(Volts(analogInput(5)))
+  # ~ print(Distance(5))
+  # ~ print(Distance(3))
+  # ~ sleep(.2)
+  # ~ print()
+  # ~ i = i + 1
   

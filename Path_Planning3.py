@@ -466,6 +466,8 @@ def path_planning3(x,y, sensor):
     sumError = 0
     start_time = time.time()
     
+    init_distance()
+    
     	
     curr_state = state.DEFAULT
 	
@@ -549,6 +551,8 @@ while True:
     control_speed(1, 1)
     time.sleep(0.1)
     path_planning3(float(x),float(y), sensor)
+    
+    
     # ~ print("Distance 0 is: {}".format(Distance(0)))
     # ~ print("Distance 1 is: {}".format(Distance(1)))
     # ~ print("Distance 2 is: {}".format(Distance(2)))
@@ -557,6 +561,12 @@ while True:
     # ~ print()
     # ~ print(Distance(2))
     # ~ time.sleep(0.5)
+    
+    # ~ input("press enter to start")
+    # ~ init_distance()
+    # ~ while True:
+        # ~ time.sleep(0.5)
+        # ~ print(Distance(0))
     
     
  
