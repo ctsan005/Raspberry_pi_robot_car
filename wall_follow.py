@@ -26,7 +26,7 @@ def wall_following(kp,ki,kd,rightspeed,leftspeed):
 
 	start_time = time.time()
 
-	target_distance_wall = 0.4      #need to adjust later, a variable for the target distance to the wall
+	target_distance_wall = 0.5      #need to adjust later, a variable for the target distance to the wall
 
 	#init the car speed
 	kit.motor1.throttle = leftspeed
@@ -53,7 +53,7 @@ def wall_following(kp,ki,kd,rightspeed,leftspeed):
 			print("hit wall")
 			# ~ break
 		
-		output, prev, sumError = pid_wall(target_distance_wall, Distance(1), time.time() - loop_time,  prev, sumError, kp, ki, kd) #Call the pid function to obtain the change needed for the motor
+		output, prev, sumError = pid_wall(target_distance_wall, Distance(3), time.time() - loop_time,  prev, sumError, kp, ki, kd) #Call the pid function to obtain the change needed for the motor
 		
 		print(output,prev,sumError)
 		
@@ -73,7 +73,7 @@ def wall_following(kp,ki,kd,rightspeed,leftspeed):
 		wall_dis.append(t)
 		Time.append(t)
 		Target.append(t)
-		wall_dis[t] = Distance(1)
+		wall_dis[t] = Distance(3)
 		Time[t] = time.time() - start_time
 		Target[t] = target_distance_wall
 		t = t + 1
@@ -82,7 +82,7 @@ def wall_following(kp,ki,kd,rightspeed,leftspeed):
 		time.sleep(.05)
 
 		print(Distance(0))
-		print(Distance(1))
+		print(Distance(3))
 
 	#stop the car to prevent the car to hit the wall
 	kit.motor1.throttle = None
@@ -98,9 +98,17 @@ while(1):
 	kit.motor3.throttle = None
 	kit.motor4.throttle = None
 	print(Distance(0))
-	print(Distance(1))
+	print(Distance(3))
 	kp = input("please enter kp value: ")
 	ki = input("please enter ki value: ")
 	kd = input("please enter kd value: ")
-	# ~ wall_following(float(kp),float(ki),float(kd),1,1)	
+	# ~ #wall_following(float(kp),float(ki),float(kd),1,1)
+	kit.motor1.throttle = 1			#Goof kp ki kd value are 0.01, 0.005, 0.01
+	kit.motor2.throttle = 1
+	kit.motor3.throttle = 1
+	kit.motor4.throttle = 1	
+	time.sleep(0.1)
 	wall_following(float(kp),float(ki),float(kd),1,1)			#kp = 0.15, ki = 0.036, kd = 0.33	
+	
+# ~ while(1):
+	# ~ print(Distance(3))

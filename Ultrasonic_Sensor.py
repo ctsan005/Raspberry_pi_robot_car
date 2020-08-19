@@ -33,7 +33,7 @@ def Wall_Distance(voltage):
 def Distance(channel):
   data = analogInput(channel)
   voltage = Volts(data)
-  if (channel == 3 or channel == 4): # channel 3 and 4 are for ir sensor distance
+  if (channel == 3 or channel == 5): # channel 3 and 4 are for ir sensor distance
     Distance = Wall_Distance(voltage)
     return Distance
   else:
@@ -43,9 +43,9 @@ def Distance(channel):
 
 # ~ i = 0
 # ~ while i < 100:
+  # ~ print(Volts(analogInput(5)))
+  # ~ print(Distance(5))
   # ~ print(Distance(3))
-  # ~ print(Distance(4))
-  # ~ print(Distance(2))
   # ~ sleep(.2)
   # ~ print()
   # ~ i = i + 1
