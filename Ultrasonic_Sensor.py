@@ -15,10 +15,12 @@ def Begin_Chaining():
   
   GPIO.setup(26, GPIO.OUT)
   GPIO.output(26, GPIO.LOW)
-  sleep(.00004)
+  sleep(.0001)
   GPIO.output(26, GPIO.HIGH)
-  sleep(.00004)
+  sleep(.0001)
   GPIO.output(26, GPIO.LOW)
+  sleep(.0001)
+  GPIO.setup(26, GPIO.IN)
 # Start SPI connection
 spi = spidev.SpiDev() # Created an object
 spi.open(0,0) 
@@ -82,9 +84,8 @@ def init_distance():
 
   
 def Distance(channel):
-  Begin_Chaining()
   # this variable is for how many percent to trust the new reading for the sensor value
-  percent = 0.99
+  percent = 0.7
   global distance
   data = analogInput(channel)
   voltage = Volts(data)
@@ -96,25 +97,32 @@ def Distance(channel):
   distance[channel] = Distance * percent + distance[channel] * (1-percent)
   return round(distance[channel],2)
   
-def Distance_old(channel):
-  global distance
-  data = analogInput(channel)
-  voltage = Volts(data)
-  if (channel == 3 or channel == 4): # channel 3 and 4 are for ir sensor distance
-    Distance = Wall_Distance(voltage)
-  else:
-    Distance = Range(voltage)
+def updateDistance():
+  #use to update all the distance variable once
+  Distance(0)
+  Distance(1)
+  Distance(2)
+  Distance(3)
+  Distance(4)
+  
+# ~ def Distance_old(channel):
+  # ~ global distance
+  # ~ data = analogInput(channel)
+  # ~ voltage = Volts(data)
+  # ~ if (channel == 3 or channel == 4): # channel 3 and 4 are for ir sensor distance
+    # ~ Distance = Wall_Distance(voltage)
+  # ~ else:
+    # ~ Distance = Range(voltage)
 
-  return round(Distance,2)
+  # ~ return round(Distance,2)
 	
 
 # ~ i = 0
 # ~ init_distance()
 # ~ while i < 100:
-  # ~ print(Volts(analogInput(0)))
-  # ~ print(Distance_old(0))
-  # ~ print(Distance_old(1))
-  # ~ print(Distance_old(2))
+  # ~ print(Distance(0))
+  # ~ print(Distance(3))
+  # ~ print(Distance(4))
   # ~ sleep(.2)
   # ~ print()
   # ~ i = i + 1

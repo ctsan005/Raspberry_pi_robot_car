@@ -394,7 +394,7 @@ def reach_destinition_state():
 def change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rightspeed):
     total_distance = math.sqrt((x - local_x)**2 + (y - local_y)**2)
     
-    
+    updateDistance()
 
     temp_state = state.NONE
     
@@ -402,19 +402,24 @@ def change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rig
     if(total_distance < 0.2):
         temp_state = state.REACH_DESTINATION
         
-    elif(Distance(0) < 0.3):
-        temp_state = state.CRASH
-        
-    elif((Distance(0) < 1.5) and (Distance(1) < 1.5)):
+    elif(distance[0] < 0.5):
+        sleep(.150)
+        updateDistance()
+        if(distance[0] < 0.5):
+            temp_state = state.CRASH
+            
+        else:
+            temp_state = curr_state
+    elif((distance[0] < 1.5) and (distance[1] < 1.5)):
         temp_state = state.TURN_RIGHT
 
-    elif((Distance(0) < 1.5) or ( ( Distance(0) < 1.5 ) and ( Distance(2) < 1.5 ) ) ):
+    elif((distance[0] < 1.5) or ( ( distance[0] < 1.5 ) and ( distance[2] < 1.5 ) ) ):
         temp_state = state.TURN_LEFT
 
-    elif(destination_left(x,y,local_x,local_y,sensor) and (Distance(3) < 0.6)):
+    elif(destination_left(x,y,local_x,local_y,sensor) and (distance[3] < 0.6)):
         temp_state = state.WALL_LEFT
 
-    elif(destination_right(x,y,local_x,local_y,sensor) and (Distance(4) < 0.6)):
+    elif(destination_right(x,y,local_x,local_y,sensor) and (distance[4] < 0.6)):
         temp_state = state.WALL_RIGHT
         
     else:
@@ -576,14 +581,3 @@ while True:
         # ~ print(Distance(0))
     
     
- 
-# ~ print(destination_left(2,2,0,0,sensor))
-# ~ print(destination_left(-2,2,0,0,sensor))
-# ~ print(destination_left(-2,-2,0,0,sensor))
-# ~ print(destination_left(2,-2,0,0,sensor))
-
-# ~ print(destination_right(2,2,0,0,sensor))
-# ~ print(destination_right(-2,2,0,0,sensor))
-# ~ print(destination_right(-2,-2,0,0,sensor))
-# ~ print(destination_right(2,-2,0,0,sensor))
-            
