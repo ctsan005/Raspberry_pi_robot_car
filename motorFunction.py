@@ -56,8 +56,11 @@ def pid_wall(desired_value, actual_value, iteration_time , error_prior, integral
     
     derivative = (error - error_prior) / iteration_time
     
-    if(derivative > 1):
+    if(derivative > 1 or derivative < -1):
         derivative = 0
+        
+    
+    # ~ print("Kp term: {} , ki term: {}, kd term: {}".format(kp * error , ki * integral , kd * derivative))
     
     output = kp * error + ki * integral + kd * derivative
     error_prior = error
