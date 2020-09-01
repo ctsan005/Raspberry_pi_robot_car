@@ -92,7 +92,7 @@ def check_sensor(times, sensor_num):
 #use to run the FWDKIN equation and update the location of the car
 def update_location(start_time, local_x, local_y, local_radians, origin_radians):
     
-    print("time betweeen state: {}".format(time.time() - start_time))
+    # ~ print("time betweeen state: {}".format(time.time() - start_time))
     
     VL , VR = wheelspeed()
     
@@ -124,6 +124,9 @@ def default_state(x,y,local_x, local_y,sensor, leftspeed, rightspeed,prev,sumErr
     
     if x == 0:		#handle the special case of x = 0
         x = 0.000001
+        
+    if(y == 0):
+        y = 0.000001
     
     #Read new angle
     local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
@@ -135,22 +138,27 @@ def default_state(x,y,local_x, local_y,sensor, leftspeed, rightspeed,prev,sumErr
     #Calculate desired angle to reach target.
     t_angle = math.degrees ( math.atan( (y - local_y)/(x - local_x) ) )
     
-    if t_angle > 0:
+    if t_angle >= 0:
         #Quadrant 1
-        if (y - local_y) > 0:
+        
+        if (y - local_y) >= 0:
+            print(1)
             t_angle = t_angle		
         
         #Quadrant 2
         else:
+            print(2)
             t_angle = 180 + t_angle
             
     else:	
         #Quadrant 4
         if (y - local_y) < 0:
+            print(4)
             t_angle = 360 + t_angle
             
         #Quadrant 3
         else:
+            print(3)
             t_angle = 180 + t_angle
     
     #This is our target angle. The angle we desire to reach.		
@@ -290,15 +298,20 @@ def destination_right(x,y,local_x,local_y,sensor):
     c_angle = math.degrees(local_radians)
     
     temp_x = x - local_x
+    temp_y = y - local_y
     
     if(temp_x == 0):
         temp_x = 0.001
+    if(temp_y == 0):
+        temp_y = 0.001
+        
 
-    t_angle = math.degrees ( math.atan( (y - local_y)/(temp_x) ) )
+
+    t_angle = math.degrees ( math.atan( (temp_y)/(temp_x) ) )
     
     if t_angle > 0:
         #Quadrant 1
-        if (y - local_y) > 0:
+        if (y - local_y) >= 0:
             t_angle = t_angle		
         
         #Quadrant 2
@@ -401,11 +414,11 @@ def change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rig
     # ~ elif((Distance(0) < 1.5) and (Distance(2) < 1)):
         # ~ temp_state = state.TURN_LEFT
 
-    elif(destination_left(x,y,local_x,local_y,sensor) and (Distance(3) < 0.6)):
-        temp_state = state.WALL_LEFT
+    # ~ elif(destination_left(x,y,local_x,local_y,sensor) and (Distance(3) < 0.6)):
+        # ~ temp_state = state.WALL_LEFT
 
-    elif(destination_right(x,y,local_x,local_y,sensor) and (Distance(5) < 0.6)):
-        temp_state = state.WALL_RIGHT
+    # ~ elif(destination_right(x,y,local_x,local_y,sensor) and (Distance(5) < 0.6)):
+        # ~ temp_state = state.WALL_RIGHT
         
     else:
         temp_state = state.DEFAULT
@@ -453,23 +466,27 @@ def path_planning3(x,y, sensor):
     sumError = 0
     start_time = time.time()
     
+    init_distance()
+    
     	
     curr_state = state.DEFAULT
 	
     #Car will keep driving until it is less than .2m from target
     while (curr_state != state.REACH_DESTINATION):
-        print("Distance 0: {}".format(Distance(0)))
+        # ~ print("Distance 0: {}".format(Distance(0)))
         # ~ print("Distance 1: {}".format(Distance(1)))
         # ~ print("Distance 2: {}".format(Distance(2)))
-        print("Distance 3: {}".format(Distance(3)))
-        print("Distance 5: {}".format(Distance(5)))
+        # ~ print("Distance 3: {}".format(Distance(3)))
+        # ~ print("Distance 5: {}".format(Distance(5)))
         
         # ~ print()
         # ~ print("distance need to travel: {} ".format(total_distance))
         print("The current x and y is {}, {}".format(local_x, local_y))
-        print("Left and right speed is {} and {}".format(leftspeed, rightspeed))
+        # ~ print("Left and right speed is {} and {}".format(leftspeed, rightspeed))
         # ~ print("Foward Kinematic angle: {}".format(math.degrees(local_radians)))
-        print()
+        # ~ print()
+        
+        print("time betweeen state: {}".format(time.time() - start_time))
         
         if(curr_state == state.DEFAULT):
             print("current state is {}".format(curr_state))
@@ -498,8 +515,8 @@ def path_planning3(x,y, sensor):
             curr_state, prev, sumError, leftspeed, rightspeed = change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rightspeed)
             # ~ print("Next state is {}".format(curr_state))
 
-        elif(curr_state == state.WALL_LEFT):
-            print("current state is {}".format(curr_state))
+        # ~ elif(curr_state == state.WALL_LEFT):
+            # ~ print("current state is {}".format(curr_state))
             start_time, local_x, local_y, local_radians, prev, sumError, leftspeed, rightspeed = wall_follow_left_state(local_x, local_y, sensor,origin_radians, start_time, prev, sumError, leftspeed, rightspeed)
 
             curr_state, prev, sumError, leftspeed, rightspeed = change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rightspeed)
@@ -534,6 +551,22 @@ while True:
     control_speed(1, 1)
     time.sleep(0.1)
     path_planning3(float(x),float(y), sensor)
+    
+    
+    # ~ print("Distance 0 is: {}".format(Distance(0)))
+    # ~ print("Distance 1 is: {}".format(Distance(1)))
+    # ~ print("Distance 2 is: {}".format(Distance(2)))
+    # ~ print("Distance 3 is: {}".format(Distance(3)))
+    # ~ print("Distance 5 is: {}".format(Distance(5)))
+    # ~ print()
+    # ~ print(Distance(2))
+    # ~ time.sleep(0.5)
+    
+    # ~ input("press enter to start")
+    # ~ init_distance()
+    # ~ while True:
+        # ~ time.sleep(0.5)
+        # ~ print(Distance(0))
     
     
  

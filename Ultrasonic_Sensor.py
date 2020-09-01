@@ -1,6 +1,12 @@
 # Importing modules
 import spidev # To communicate with SPI devices
 from time import sleep  # To add delay
+from statistics import median
+import numpy
+
+#keep track the last distance value for each sensor, need to call the init_distance function to get the best result before run
+distance = [0,0,0,0,0]
+
 
 # Start SPI connection
 spi = spidev.SpiDev() # Created an object
@@ -29,16 +35,47 @@ def Range(voltage):
 def Wall_Distance(voltage):
   distance = -0.467 * voltage + .987
   return distance
+
+def init_distance():
+  #get the array from global
+  global distance
+
+  #create a 2d array to store the result for the collection of data
+  sensor_val = numpy.zeros((5, 5))
+  
+  #read the value 5 times for each sensor
+  for a in range(5):
+    sensor_val[0][a] = Range(Volts(analogInput(0)))
+    sensor_val[1][a] = Range(Volts(analogInput(1)))
+    sensor_val[2][a] = Range(Volts(analogInput(2)))
+    sensor_val[3][a] = Wall_Distance(Volts(analogInput(3)))
+    sensor_val[4][a] = Wall_Distance(Volts(analogInput(4)))
+    sleep(0.1)
+
+  #get the median for each sensor reading
+  for a in range(5):
+    distance[a] = median(sensor_val[a])
+
+  print("Finish init the sensor distance, ready to run")
+  print(distance)
+  return True
+
+  
+
+
+
   
 def Distance(channel):
+  global distance
   data = analogInput(channel)
   voltage = Volts(data)
-  if (channel == 3 or channel == 5): # channel 3 and 4 are for ir sensor distance
+  if (channel == 3 or channel == 4): # channel 3 and 4 are for ir sensor distance
     Distance = Wall_Distance(voltage)
-    return Distance
   else:
     Distance = Range(voltage)
-    return Distance
+  
+  distance[channel] = Distance * 0.15 + distance[channel] * 0.85
+  return round(distance[channel],2)
 	
 
 # ~ i = 0
