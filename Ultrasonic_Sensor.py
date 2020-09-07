@@ -3,11 +3,22 @@ import spidev # To communicate with SPI devices
 from time import sleep  # To add delay
 from statistics import median
 import numpy
-
+import RPi.GPIO as GPIO
 #keep track the last distance value for each sensor, need to call the init_distance function to get the best result before run
 distance = [0,0,0,0,0]
 
 
+
+def Begin_Chaining():
+  GPIO.setmode(GPIO.BCM)
+  GPIO.setwarnings(False)
+  
+  GPIO.setup(26, GPIO.OUT)
+  GPIO.output(26, GPIO.LOW)
+  sleep(.00004)
+  GPIO.output(26, GPIO.HIGH)
+  sleep(.00004)
+  GPIO.output(26, GPIO.LOW)
 # Start SPI connection
 spi = spidev.SpiDev() # Created an object
 spi.open(0,0) 
@@ -36,7 +47,10 @@ def Wall_Distance(voltage):
   distance = -0.467 * voltage + .987
   return distance
 
+  
+
 def init_distance():
+  Begin_Chaining()
   #get the array from global
   global distance
 
@@ -50,15 +64,17 @@ def init_distance():
     sensor_val[2][a] = Range(Volts(analogInput(2)))
     sensor_val[3][a] = Wall_Distance(Volts(analogInput(3)))
     sensor_val[4][a] = Wall_Distance(Volts(analogInput(4)))
-    sleep(0.1)
+    sleep(0.11)
 
   #get the median for each sensor reading
   for a in range(5):
     distance[a] = median(sensor_val[a])
 
   print("Finish init the sensor distance, ready to run")
-  print(distance)
+  print("The init distance for all sensor are: {}".format(distance))
   return True
+  
+
 
   
 
@@ -66,6 +82,9 @@ def init_distance():
 
   
 def Distance(channel):
+  Begin_Chaining()
+  # this variable is for how many percent to trust the new reading for the sensor value
+  percent = 0.99
   global distance
   data = analogInput(channel)
   voltage = Volts(data)
@@ -74,15 +93,28 @@ def Distance(channel):
   else:
     Distance = Range(voltage)
   
-  distance[channel] = Distance * 0.15 + distance[channel] * 0.85
+  distance[channel] = Distance * percent + distance[channel] * (1-percent)
   return round(distance[channel],2)
+  
+def Distance_old(channel):
+  global distance
+  data = analogInput(channel)
+  voltage = Volts(data)
+  if (channel == 3 or channel == 4): # channel 3 and 4 are for ir sensor distance
+    Distance = Wall_Distance(voltage)
+  else:
+    Distance = Range(voltage)
+
+  return round(Distance,2)
 	
 
 # ~ i = 0
+# ~ init_distance()
 # ~ while i < 100:
-  # ~ print(Volts(analogInput(5)))
-  # ~ print(Distance(5))
-  # ~ print(Distance(3))
+  # ~ print(Volts(analogInput(0)))
+  # ~ print(Distance_old(0))
+  # ~ print(Distance_old(1))
+  # ~ print(Distance_old(2))
   # ~ sleep(.2)
   # ~ print()
   # ~ i = i + 1

@@ -11,6 +11,7 @@ import adafruit_bno055
 from adafruit_motorkit import MotorKit
 import matplotlib.pyplot as plt 
 import enum
+import sys
 
 # note for sensor number
 # sensor 0: front ultrasonic sensor
@@ -142,23 +143,19 @@ def default_state(x,y,local_x, local_y,sensor, leftspeed, rightspeed,prev,sumErr
         #Quadrant 1
         
         if (y - local_y) >= 0:
-            print(1)
             t_angle = t_angle		
         
         #Quadrant 2
         else:
-            print(2)
             t_angle = 180 + t_angle
             
     else:	
         #Quadrant 4
         if (y - local_y) < 0:
-            print(4)
             t_angle = 360 + t_angle
             
         #Quadrant 3
         else:
-            print(3)
             t_angle = 180 + t_angle
     
     #This is our target angle. The angle we desire to reach.		
@@ -232,7 +229,7 @@ def wall_follow_right_state(local_x, local_y, sensor,origin_radians, start_time,
     target_distance_wall = 0.5     #need to adjust later, a variable for the target distance to the wall
 
 
-    output, prev, sumError = pid_wall(target_distance_wall, Distance(5), time.time() - start_time,  prev, sumError, 0.15, 0.036, 0.33) #Call the pid function to obtain the change needed for the motor
+    output, prev, sumError = pid_wall(target_distance_wall, Distance(4), time.time() - start_time,  prev, sumError, 0.15, 0.036, 0.33) #Call the pid function to obtain the change needed for the motor
 
     #Read new angle
     local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
@@ -408,17 +405,17 @@ def change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rig
     elif(Distance(0) < 0.3):
         temp_state = state.CRASH
         
-    # ~ elif((Distance(0) < 1.5) and (Distance(1) < 1)):
-        # ~ temp_state = state.TURN_RIGHT
+    elif((Distance(0) < 1.5) and (Distance(1) < 1.5)):
+        temp_state = state.TURN_RIGHT
 
-    # ~ elif((Distance(0) < 1.5) and (Distance(2) < 1)):
-        # ~ temp_state = state.TURN_LEFT
+    elif((Distance(0) < 1.5) or ( ( Distance(0) < 1.5 ) and ( Distance(2) < 1.5 ) ) ):
+        temp_state = state.TURN_LEFT
 
-    # ~ elif(destination_left(x,y,local_x,local_y,sensor) and (Distance(3) < 0.6)):
-        # ~ temp_state = state.WALL_LEFT
+    elif(destination_left(x,y,local_x,local_y,sensor) and (Distance(3) < 0.6)):
+        temp_state = state.WALL_LEFT
 
-    # ~ elif(destination_right(x,y,local_x,local_y,sensor) and (Distance(5) < 0.6)):
-        # ~ temp_state = state.WALL_RIGHT
+    elif(destination_right(x,y,local_x,local_y,sensor) and (Distance(4) < 0.6)):
+        temp_state = state.WALL_RIGHT
         
     else:
         temp_state = state.DEFAULT
@@ -473,11 +470,13 @@ def path_planning3(x,y, sensor):
 	
     #Car will keep driving until it is less than .2m from target
     while (curr_state != state.REACH_DESTINATION):
+        print()
         # ~ print("Distance 0: {}".format(Distance(0)))
         # ~ print("Distance 1: {}".format(Distance(1)))
         # ~ print("Distance 2: {}".format(Distance(2)))
         # ~ print("Distance 3: {}".format(Distance(3)))
         # ~ print("Distance 5: {}".format(Distance(5)))
+        print("The Sensor values are: {}".format([round(Distance(0),2),round(Distance(1),2),round(Distance(2),2),round(Distance(3),2),round(Distance(4),2)]))
         
         # ~ print()
         # ~ print("distance need to travel: {} ".format(total_distance))
@@ -515,8 +514,8 @@ def path_planning3(x,y, sensor):
             curr_state, prev, sumError, leftspeed, rightspeed = change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rightspeed)
             # ~ print("Next state is {}".format(curr_state))
 
-        # ~ elif(curr_state == state.WALL_LEFT):
-            # ~ print("current state is {}".format(curr_state))
+        elif(curr_state == state.WALL_LEFT):
+            print("current state is {}".format(curr_state))
             start_time, local_x, local_y, local_radians, prev, sumError, leftspeed, rightspeed = wall_follow_left_state(local_x, local_y, sensor,origin_radians, start_time, prev, sumError, leftspeed, rightspeed)
 
             curr_state, prev, sumError, leftspeed, rightspeed = change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rightspeed)
@@ -544,6 +543,7 @@ i2c = busio.I2C(board.SCL, board.SDA)
 sensor = adafruit_bno055.BNO055(i2c) 
 control_speed(None,None)
 # ~ sensor = calibration()
+init_distance()
 while True:
     control_speed(None, None)
     x = input("number of x ")
@@ -553,9 +553,16 @@ while True:
     path_planning3(float(x),float(y), sensor)
     
     
-    # ~ print("Distance 0 is: {}".format(Distance(0)))
-    # ~ print("Distance 1 is: {}".format(Distance(1)))
-    # ~ print("Distance 2 is: {}".format(Distance(2)))
+    # ~ print("Distance 0 recent reading is: {}".format(Distance_old(0)))
+    # ~ print("Distance 1 recent reading is: {}".format(Distance_old(1)))
+    # ~ print("Distance 2 recent reading is: {}".format(Distance_old(2)))
+
+    # ~ print("Distance 0 with filter is: {}".format(Distance(0)))
+    # ~ print("Distance 1 with filter is: {}".format(Distance(1)))
+    # ~ print("Distance 2 with filter is: {}".format(Distance(2)))
+    # ~ print()
+
+    # ~ time.sleep(1)
     # ~ print("Distance 3 is: {}".format(Distance(3)))
     # ~ print("Distance 5 is: {}".format(Distance(5)))
     # ~ print()
