@@ -85,18 +85,12 @@ def turn_left():
 
 
 def back_right():
-    kit.motor1.throttle = -1
-    kit.motor2.throttle = -1
-    kit.motor3.throttle = -0.3
-    kit.motor4.throttle = -0.3
+    control_speed(-1,-0.3)
     return
 
 
 def back_left():
-    kit.motor1.throttle = -0.3
-    kit.motor2.throttle = -0.3
-    kit.motor3.throttle = -1
-    kit.motor4.throttle = -1
+    control_speed(-0.3,-1)
     return
 
 #use to read the sensor multiple time and return the lowest number out of all the times it run
@@ -114,6 +108,29 @@ def update_location(start_time, local_x, local_y, local_radians, origin_radians)
     # ~ print("time betweeen state: {}".format(time.time() - start_time))
     
     VL , VR = wheelspeed()
+    
+    #Calculate sameple time for foward kinematics
+    sample_time = time.time() - start_time
+    
+    
+    # distance between left and right wheel = 0.229m
+    #Updates current location of car.
+    ans =  FWDKIN(local_x, local_y, (local_radians - origin_radians), sample_time, 0.229, VL, VR)
+    start_time = time.time()
+    x = ans[0][0]
+    y = ans[1][0]
+    radian = origin_radians + ans[2][0]
+    return start_time, x,y,radian
+
+#use to run the FWDKIN equation when the car move backward
+def update_location_back(start_time, local_x, local_y, local_radians, origin_radians):
+    
+    # ~ print("time betweeen state: {}".format(time.time() - start_time))
+    
+    VL , VR = wheelspeed()
+
+    VL = -VL
+    VR = -VR
     
     #Calculate sameple time for foward kinematics
     sample_time = time.time() - start_time
@@ -303,6 +320,8 @@ def crash_state():
 
 #state to back right when sense an obstacle
 def back_right_state(local_x, local_y, sensor,origin_radians):
+    control_speed(-1,-1)
+    time.sleep(0.01)
     back_right()
 
     current_time = time.time()
@@ -316,12 +335,14 @@ def back_right_state(local_x, local_y, sensor,origin_radians):
     while math.degrees(local_radians) < -500 or math.degrees(local_radians) > 500:
         local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
 
-    start_time, local_x, local_y, local_radians = update_location(current_time, local_x, local_y, local_radians, origin_radians)
+    start_time, local_x, local_y, local_radians = update_location_back(current_time, local_x, local_y, local_radians, origin_radians)
     return start_time , local_x, local_y, local_radians
 
 
 #state to back left when sense an obstacle
 def back_left_state(local_x, local_y, sensor,origin_radians):
+    control_speed(-1,-1)
+    time.sleep(0.01)
     back_left()
 
     current_time = time.time()
@@ -335,7 +356,7 @@ def back_left_state(local_x, local_y, sensor,origin_radians):
     while math.degrees(local_radians) < -500 or math.degrees(local_radians) > 500:
         local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
 
-    start_time, local_x, local_y, local_radians = update_location(current_time, local_x, local_y, local_radians, origin_radians)
+    start_time, local_x, local_y, local_radians = update_location_back(current_time, local_x, local_y, local_radians, origin_radians)
     return start_time , local_x, local_y, local_radians
 
 #need to finish later if need this function
