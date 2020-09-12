@@ -33,6 +33,8 @@ class state(enum.Enum):
     WALL_LEFT = 5
     REACH_DESTINATION = 6
     CRASH = 7
+    BACK_LEFT = 8
+    BACK_RIGHT = 9
 
 
 def x_y_graph(x, y):
@@ -65,7 +67,7 @@ def control_speed(left, right):
 def mirror_sensor_angle(angle):
 	return 360 - angle
 
-#need to complete later after testing number
+
 def turn_right():
     kit.motor1.throttle = 1
     kit.motor2.throttle = 1
@@ -73,7 +75,7 @@ def turn_right():
     kit.motor4.throttle = 0.3
     return
 
-#need to complete later after testing number
+
 def turn_left():
     kit.motor1.throttle = 0.3
     kit.motor2.throttle = 0.3
@@ -81,10 +83,26 @@ def turn_left():
     kit.motor4.throttle = 1
     return
 
+
+def back_right():
+    kit.motor1.throttle = -1
+    kit.motor2.throttle = -1
+    kit.motor3.throttle = -0.3
+    kit.motor4.throttle = -0.3
+    return
+
+
+def back_left():
+    kit.motor1.throttle = -0.3
+    kit.motor2.throttle = -0.3
+    kit.motor3.throttle = -1
+    kit.motor4.throttle = -1
+    return
+
 #use to read the sensor multiple time and return the lowest number out of all the times it run
 def check_sensor(times, sensor_num):
     dis = Distance(sensor_num)
-    for x in range(times):
+    for _ in range(times):
         temp = Distance(sensor_num)
         if(temp < dis):
             dis = temp
@@ -177,7 +195,7 @@ def default_state(x,y,local_x, local_y,sensor, leftspeed, rightspeed,prev,sumErr
     start_time, local_x, local_y, local_radians = update_location(start_time, local_x, local_y, local_radians, origin_radians)
     
     #Update distance magnitude from current location to destination.
-    total_distance = math.sqrt((x - local_x)**2 + (y - local_y)**2)
+    # total_distance = math.sqrt((x - local_x)**2 + (y - local_y)**2)
 
     
     time.sleep(0.02)
@@ -282,6 +300,43 @@ def crash_state():
     print("The car is going to crash")
     return
 
+
+#state to back right when sense an obstacle
+def back_right_state(local_x, local_y, sensor,origin_radians):
+    back_right()
+
+    current_time = time.time()
+
+    time.sleep(0.5)
+
+    #Read new angle
+    local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
+    
+    #Prevents angle from being too large due to invalid data.
+    while math.degrees(local_radians) < -500 or math.degrees(local_radians) > 500:
+        local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
+
+    start_time, local_x, local_y, local_radians = update_location(current_time, local_x, local_y, local_radians, origin_radians)
+    return start_time , local_x, local_y, local_radians
+
+
+#state to back left when sense an obstacle
+def back_left_state(local_x, local_y, sensor,origin_radians):
+    back_left()
+
+    current_time = time.time()
+
+    time.sleep(0.5)
+
+    #Read new angle
+    local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
+
+    #Prevents angle from being too large due to invalid data.
+    while math.degrees(local_radians) < -500 or math.degrees(local_radians) > 500:
+        local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
+
+    start_time, local_x, local_y, local_radians = update_location(current_time, local_x, local_y, local_radians, origin_radians)
+    return start_time , local_x, local_y, local_radians
 
 #need to finish later if need this function
 def destination_right(x,y,local_x,local_y,sensor):
@@ -401,6 +456,12 @@ def change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rig
     
     if(total_distance < 0.2):
         temp_state = state.REACH_DESTINATION
+
+    elif(curr_state == state.CRASH):
+        if(distance[1] > distance[2]):
+            temp_state = state.BACK_RIGHT
+        else:
+            temp_state = state.BACK_LEFT
         
     elif(distance[0] < 0.5):
         sleep(.150)
@@ -501,7 +562,7 @@ def path_planning3(x,y, sensor):
             
         elif(curr_state == state.CRASH):
             crash_state()
-            return x_list,y_list,angle_list,time_list
+            curr_state, prev, sumError, leftspeed, rightspeed = change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rightspeed)
         
 
 
@@ -532,6 +593,18 @@ def path_planning3(x,y, sensor):
 
             curr_state, prev, sumError, leftspeed, rightspeed = change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rightspeed)
             # ~ print("Next state is {}".format(curr_state))
+
+        elif(curr_state == state.BACK_LEFT):
+            print("current state is {}".format(curr_state))
+            start_time , local_x, local_y, local_radians = back_left_state(local_x, local_y, sensor,origin_radians)
+
+            curr_state, prev, sumError, leftspeed, rightspeed = change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rightspeed)
+
+        elif(curr_state == state.BACK_RIGHT):
+            print("current state is {}".format(curr_state))
+            start_time , local_x, local_y, local_radians = back_right_state(local_x, local_y, sensor,origin_radians)
+
+            curr_state, prev, sumError, leftspeed, rightspeed = change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rightspeed)
 
         #Append data points
         x_list.append(local_x)
