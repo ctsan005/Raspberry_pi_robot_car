@@ -33,8 +33,6 @@ class state(enum.Enum):
     WALL_LEFT = 5
     REACH_DESTINATION = 6
     CRASH = 7
-    BACK_LEFT = 8
-    BACK_RIGHT = 9
 
 
 def x_y_graph(x, y):
@@ -477,12 +475,6 @@ def change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rig
     
     if(total_distance < 0.2):
         temp_state = state.REACH_DESTINATION
-
-    elif(curr_state == state.CRASH):
-        if(distance[1] > distance[2]):
-            temp_state = state.BACK_RIGHT
-        else:
-            temp_state = state.BACK_LEFT
         
     elif(distance[0] < 0.5):
         sleep(.150)
@@ -583,7 +575,7 @@ def path_planning3(x,y, sensor):
             
         elif(curr_state == state.CRASH):
             crash_state()
-            curr_state, prev, sumError, leftspeed, rightspeed = change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rightspeed)
+            exit()
         
 
 
@@ -614,18 +606,6 @@ def path_planning3(x,y, sensor):
 
             curr_state, prev, sumError, leftspeed, rightspeed = change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rightspeed)
             # ~ print("Next state is {}".format(curr_state))
-
-        elif(curr_state == state.BACK_LEFT):
-            print("current state is {}".format(curr_state))
-            start_time , local_x, local_y, local_radians = back_left_state(local_x, local_y, sensor,origin_radians)
-
-            curr_state, prev, sumError, leftspeed, rightspeed = change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rightspeed)
-
-        elif(curr_state == state.BACK_RIGHT):
-            print("current state is {}".format(curr_state))
-            start_time , local_x, local_y, local_radians = back_right_state(local_x, local_y, sensor,origin_radians)
-
-            curr_state, prev, sumError, leftspeed, rightspeed = change_state(curr_state, x,y,local_x,local_y, prev, sumError, leftspeed, rightspeed)
 
         #Append data points
         x_list.append(local_x)
