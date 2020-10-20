@@ -25,7 +25,7 @@ def pid(desired_value, actual_value, iteration_time , error_prior, integral_prio
     if(error < -300 or error > 300):        #if the error is too much, it mean the sensor has some gitch reading the angle. Use the previous data for now.
         error = error_prior
     
-    if error > 2:                   #pid function is also use for turning, this help prevent the integral value affect the calculation too much
+    if error > 15:                   #pid function is also use for turning, this help prevent the integral value affect the calculation too much
         integral = 0
     else:
         integral = integral_prior + error * iteration_time

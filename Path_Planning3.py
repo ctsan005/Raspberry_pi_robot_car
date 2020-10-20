@@ -226,7 +226,7 @@ def turn_right_state(local_x, local_y, sensor,origin_radians):
 
     current_time = time.time()
 
-    time.sleep(0.2)
+    time.sleep(0.1)
 
     #Read new angle
     local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )
@@ -245,7 +245,7 @@ def turn_left_state(local_x, local_y, sensor,origin_radians):
 
     current_time = time.time()
 
-    time.sleep(0.2)
+    time.sleep(0.1)
 
     #Read new angle
     local_radians = math.radians(mirror_sensor_angle( sensor.euler[0] ) )

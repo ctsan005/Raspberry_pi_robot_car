@@ -3,10 +3,11 @@ import board
 import busio
 from subprocess import call
 from motorFunction import *
-from Tune_PID import *
 from Ultrasonic_Sensor import *
 import adafruit_bno055
 from adafruit_motorkit import MotorKit
+from Ultrasonic_Sensor import distance, init_distance, updateDistance
+import matplotlib.pyplot as plt 
 
 kit = MotorKit()
 i2c = busio.I2C(board.SCL, board.SDA)
@@ -25,6 +26,7 @@ def graph(x1, y1, x2 ,y2):
 
 #use for testing the pid function with two parts, first going straight and then make a turn by setting the target angle slightly different. It will generate a graph for the angle the car that it faced vs the target of the angle that it should face.
 def test_PID(kp,ki,kd):
+	init_distance()
 	start_time = time.time() 			#use to keep track the begin time of the straight part
 	target = mirror_sensor_angle ( sensor.euler[0] )		#read the sensor data and convert it to unit circle format angle
 	print("initial target is : {}" .format(target))
@@ -54,7 +56,8 @@ def test_PID(kp,ki,kd):
 
 	#continue to go straight until 0.5 sec or there is a obstacle that is closer than 0.6 distance from the car
 	while( (time.time() - start_time)<.5): 
-		if(Distance(0) < .6):
+		updateDistance()
+		if(distance[0] < .6):
 			print("hit wall")
 			break
 
@@ -84,7 +87,7 @@ def test_PID(kp,ki,kd):
 		t = t + 1
 
 		#sleep to prevent the pid function run too fast
-		time.sleep(.02)
+		time.sleep(.05)
 
 	print("finish straight")
 	print("target is : {}" .format(mirror_sensor_angle( sensor.euler[0] ) ))
@@ -92,10 +95,11 @@ def test_PID(kp,ki,kd):
 
 	#Change the target angle to achieve turning, adding 0 indicate continue to go straight
 	target = (target + 0)%360
-	print(Distance(0))
+	updateDistance()
+	print(distance[0])
 
 	#continue to go straight until reach close to the wall
-	while( Distance(0) > .6): 
+	while( distance[0] > .6): 
 		output, prev, sumError = pid(target, mirror_sensor_angle( sensor.euler[0] ), time.time() - loop_time,  prev, sumError, kp, ki, kd) #Call the pid function to obtain the change needed for the motor
 		
 		# ~ if prev > 2:
@@ -123,9 +127,9 @@ def test_PID(kp,ki,kd):
 		t = t + 1
 
 		#sleep to prevent the pid run too fast
-		time.sleep(.02)
-
-		print(Distance(0))
+		time.sleep(.05)
+		updateDistance()
+		print(distance[0])
 
 	#stop the car to prevent the car to hit the wall
 	kit.motor1.throttle = None
@@ -144,10 +148,9 @@ def test_PID(kp,ki,kd):
 #testing the function
 while True:
 	kit.motor1.throttle = None			#Goof kp ki kd value are 0.01, 0.005, 0.01
-	kit.motor2.throttle = None
+	kit.motor2.throttle = None			 # 0.003, 0.0022, 0.007
 	kit.motor3.throttle = None
 	kit.motor4.throttle = None
-	print(Distance(0))
 	kp = input("please enter kp value: ")
 	ki = input("please enter ki value: ")
 	kd = input("please enter kd value: ")
